@@ -99,7 +99,12 @@ If a feature isn't on the brief's "definitely in scope" list (§01), don't build
 - ✅ Week 1: scaffold, schema, Clerk auth, CI, RLS policies
 - ✅ Week 2: Stripe products, Checkout, webhooks, entitlements wired, design tokens
 - ✅ Week 3: properties + manual-paste adapter (paste a Rightmove/Zoopla/Purplebricks URL → property row)
-- ⏳ Week 4: PropertyData stub remains (manual-paste only for v1 dev). Likely add Inngest serve endpoint here when batch ingest needs cron.
-- ⏳ Weeks 5–12: per brief §12
+- ✅ Week 4 (v1 dev variant): daily Vercel Cron refresh of manual-paste listings; PropertyData remains a stub
+- ✅ Week 5: dashboard list view + filters (postcode, price, beds, type, status) — bookmarkable URL params
+- ✅ Week 7: watchlist (add/remove from feed, sort, plan-gated via getEntitlements with Pro-trial fallback for pre-Stripe users)
+- ⏳ Week 6: saved filters + filter chips
+- ⏳ Week 8: BTL engine + assumption_profiles + criteria_profiles
+- ⏳ Week 9: deal analyser page
+- ⏳ Weeks 10–12: per brief §12
 
 When a week's deliverables ship, update the markers above and commit.

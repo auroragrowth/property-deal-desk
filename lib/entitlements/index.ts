@@ -74,7 +74,17 @@ export async function getEntitlements(userId: string): Promise<Entitlements> {
   const sub = await db.query.subscriptions.findFirst({
     where: eq(subscriptions.userId, userId),
   });
-  if (!sub || !GRANTING_STATUSES.has(sub.status)) return FREE;
+
+  // No subscription record = pre-checkout (or pre-Stripe-activation in v1
+  // dev). Per brief §05 ("14-day Pro trial"), grant Pro-equivalent
+  // entitlements so the user can actually evaluate the product. Once Stripe
+  // is activated, real subscription rows take over and this fallback only
+  // covers the brief pre-checkout window.
+  if (!sub) {
+    return { ...PRO, trial: true };
+  }
+
+  if (!GRANTING_STATUSES.has(sub.status)) return FREE;
   const trial = sub.status === "trialing";
   return mapPlan(sub.plan, trial);
 }

@@ -1,10 +1,14 @@
 import { Suspense } from "react";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 import { PasteForm } from "@/features/properties/paste-form";
 import { DashboardFilters } from "@/features/properties/dashboard-filters";
 import {
   searchProperties,
   type PropertyFilter,
 } from "@/features/properties/queries";
+import { watchlistMap } from "@/features/watchlist/queries";
+import { WatchlistButton } from "@/features/watchlist/watchlist-button";
 
 const formatPrice = (pence: number | null) =>
   pence === null ? "—" : `£${(pence / 100).toLocaleString("en-GB")}`;
@@ -37,6 +41,8 @@ export default async function DashboardPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const { userId } = await auth();
+  if (!userId) redirect("/sign-in");
   const sp = await searchParams;
 
   const types = Array.isArray(sp.type)
@@ -55,7 +61,10 @@ export default async function DashboardPage({
     status: sp.status === "all" ? "all" : "active",
   };
 
-  const recent = await searchProperties(filter);
+  const [recent, watched] = await Promise.all([
+    searchProperties(filter),
+    watchlistMap(userId),
+  ]);
 
   return (
     <main className="bg-bg-page max-w-app mx-auto p-8">
@@ -139,16 +148,24 @@ export default async function DashboardPage({
                     <p className="text-text-tertiary mt-1 text-xs capitalize">
                       {p.bedrooms ?? "—"} bed · {p.propertyType ?? "—"}
                     </p>
-                    {p.sourceUrl && (
-                      <a
-                        href={p.sourceUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-accent mt-auto pt-4 text-xs font-medium underline underline-offset-2"
-                      >
-                        View on {portalLabel(portalHost)} ↗
-                      </a>
-                    )}
+                    <div className="mt-auto flex items-end justify-between gap-3 pt-4">
+                      {p.sourceUrl ? (
+                        <a
+                          href={p.sourceUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-accent text-xs font-medium underline underline-offset-2"
+                        >
+                          View on {portalLabel(portalHost)} ↗
+                        </a>
+                      ) : (
+                        <span />
+                      )}
+                      <WatchlistButton
+                        propertyId={p.id}
+                        watchlistItemId={watched.get(p.id) ?? null}
+                      />
+                    </div>
                   </div>
                 </li>
               );
