@@ -83,6 +83,7 @@ export const properties = pgTable(
       precision: 5,
       scale: 4,
     }),
+    imageUrl: text("image_url"),
     lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).defaultNow(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   },

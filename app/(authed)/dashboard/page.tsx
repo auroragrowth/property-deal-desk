@@ -27,6 +27,7 @@ export default async function DashboardPage() {
       bedrooms: properties.bedrooms,
       propertyType: properties.propertyType,
       listingPrice: properties.listingPrice,
+      imageUrl: properties.imageUrl,
       createdAt: properties.createdAt,
       sourceUrl: propertyListings.sourceUrl,
     })
@@ -87,32 +88,45 @@ export default async function DashboardPage() {
               return (
                 <li
                   key={p.id}
-                  className="bg-bg-surface border-border flex flex-col rounded-lg border-[0.5px] p-5"
+                  className="bg-bg-surface border-border flex flex-col overflow-hidden rounded-lg border-[0.5px]"
                 >
-                  <div className="flex items-baseline justify-between gap-3">
-                    <h3 className="text-text-primary text-sm leading-snug font-medium">
-                      {p.addressLine1}
-                    </h3>
-                    <span className="text-text-tertiary font-mono text-[11px] tracking-wide whitespace-nowrap">
-                      {formatPostcode(p.postcode)}
-                    </span>
-                  </div>
-                  <p className="text-text-primary mt-3 font-serif text-2xl">
-                    {formatPrice(p.listingPrice)}
-                  </p>
-                  <p className="text-text-tertiary mt-1 text-xs capitalize">
-                    {p.bedrooms ?? "—"} bed · {p.propertyType ?? "—"}
-                  </p>
-                  {p.sourceUrl && (
-                    <a
-                      href={p.sourceUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-accent mt-4 text-xs font-medium underline underline-offset-2"
-                    >
-                      View on {portalLabel(portalHost)} ↗
-                    </a>
+                  {p.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={p.imageUrl}
+                      alt={p.addressLine1}
+                      className="aspect-[4/3] w-full object-cover"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="bg-bg-surface-2 aspect-[4/3] w-full" />
                   )}
+                  <div className="flex flex-1 flex-col p-5">
+                    <div className="flex items-baseline justify-between gap-3">
+                      <h3 className="text-text-primary text-sm leading-snug font-medium">
+                        {p.addressLine1}
+                      </h3>
+                      <span className="text-text-tertiary font-mono text-[11px] tracking-wide whitespace-nowrap">
+                        {formatPostcode(p.postcode)}
+                      </span>
+                    </div>
+                    <p className="text-text-primary mt-3 font-serif text-2xl">
+                      {formatPrice(p.listingPrice)}
+                    </p>
+                    <p className="text-text-tertiary mt-1 text-xs capitalize">
+                      {p.bedrooms ?? "—"} bed · {p.propertyType ?? "—"}
+                    </p>
+                    {p.sourceUrl && (
+                      <a
+                        href={p.sourceUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-accent mt-auto pt-4 text-xs font-medium underline underline-offset-2"
+                      >
+                        View on {portalLabel(portalHost)} ↗
+                      </a>
+                    )}
+                  </div>
                 </li>
               );
             })}

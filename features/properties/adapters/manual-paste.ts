@@ -55,6 +55,7 @@ export const manualPasteAdapter: PropertyFeedAdapter = {
     const bedrooms =
       pickBedrooms(jsonLd) ?? pickBedroomsFromText(html, og) ?? 0;
     const propertyType = pickType(jsonLd) ?? pickTypeFromText(html, og);
+    const imageUrl = pickImage(jsonLd, og);
     const sourceListingId = extractListingId(url) ?? url;
 
     return {
@@ -76,6 +77,7 @@ export const manualPasteAdapter: PropertyFeedAdapter = {
       listing_price: price,
       listing_status: "active",
       listed_at: new Date(),
+      image_url: imageUrl,
       raw_payload: { jsonLd, og, portal: pickPortal(url) },
     };
   },
@@ -250,6 +252,24 @@ function pickBedrooms(jsonLd: unknown[]): number | null {
     if (typeof obj.numberOfRooms === "number") return obj.numberOfRooms;
   }
   return null;
+}
+
+function pickImage(
+  jsonLd: unknown[],
+  og: Record<string, string>,
+): string | null {
+  for (const item of jsonLd) {
+    const obj = getRecord(item);
+    if (!obj) continue;
+    const img = obj.image;
+    if (typeof img === "string") return img;
+    if (Array.isArray(img) && typeof img[0] === "string") return img[0];
+    const imgObj = getRecord(img);
+    if (imgObj && typeof imgObj.url === "string") return imgObj.url;
+  }
+  const ogImg =
+    og["og:image:secure_url"] ?? og["og:image"] ?? og["twitter:image"];
+  return ogImg ?? null;
 }
 
 function pickType(
