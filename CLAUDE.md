@@ -98,8 +98,8 @@ If a feature isn't on the brief's "definitely in scope" list (§01), don't build
 
 - ✅ Week 1: scaffold, schema, Clerk auth, CI, RLS policies
 - ✅ Week 2: Stripe products, Checkout, webhooks, entitlements wired, design tokens
-- ⏳ Week 3: properties + manual-paste adapter
-- ⏳ Week 4: PropertyData stub remains (manual-paste only for v1 dev)
+- ✅ Week 3: properties + manual-paste adapter (paste a Rightmove/Zoopla/Purplebricks URL → property row)
+- ⏳ Week 4: PropertyData stub remains (manual-paste only for v1 dev). Likely add Inngest serve endpoint here when batch ingest needs cron.
 - ⏳ Weeks 5–12: per brief §12
 
 When a week's deliverables ship, update the markers above and commit.

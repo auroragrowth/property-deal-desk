@@ -4,22 +4,220 @@ import type {
   RawListing,
 } from "./_interface";
 
-// Manual-paste adapter — week 1 stub.
+// Manual-paste adapter — week 3 implementation.
 //
-// Per the kickoff (section 3 override), PropertyData integration is deferred.
-// The manual-paste adapter is the only adapter that ships in v1 dev.
-// Real implementation lands in week 3 once the properties table is wired.
+// Fetches a Rightmove / Zoopla / Purplebricks listing URL once, parses
+// JSON-LD + Open Graph metadata, returns a NormalisedProperty.
+//
+// Per the kickoff (section 3 override), this is the only feed adapter
+// shipping in v1 dev. PropertyData (propertydata.ts) remains a stub.
+
+const USER_AGENT =
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
+
+const UK_POSTCODE_RE =
+  /\b([A-PR-UWYZ](?:[0-9][A-HJKPSTUW]?|[A-HK-Y][0-9](?:[0-9]|[ABEHMNPRV-Y])?)\s?[0-9][ABD-HJLNP-UW-Z]{2})\b/i;
+
+type RawPaste = { url: string; html: string };
 
 export const manualPasteAdapter: PropertyFeedAdapter = {
   source: "manual",
 
   async fetchOne(url: string): Promise<RawListing> {
-    // TODO(week-3): fetch the URL, parse the listing HTML/JSON-LD, return raw.
-    throw new Error(`manual-paste: fetchOne not implemented (url=${url})`);
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent": USER_AGENT,
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-GB,en;q=0.9",
+      },
+      cache: "no-store",
+      redirect: "follow",
+    });
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status} ${res.statusText}`);
+    }
+    const html = await res.text();
+    return { url, html } satisfies RawPaste;
   },
 
-  normalise(_raw: RawListing): NormalisedProperty {
-    // TODO(week-3): map raw payload to NormalisedProperty.
-    throw new Error("manual-paste: normalise not implemented");
+  normalise(raw: RawListing): NormalisedProperty {
+    const { url, html } = raw as RawPaste;
+    const jsonLd = extractJsonLd(html);
+    const og = extractOpenGraph(html);
+
+    const address =
+      pickAddress(jsonLd) ?? og["og:title"] ?? "Unknown address";
+    const postcode = pickPostcode(jsonLd) ?? scanPostcode(html) ?? "";
+    const price = pickPricePence(jsonLd, og) ?? 0;
+    const bedrooms = pickBedrooms(jsonLd) ?? 0;
+    const propertyType = pickType(jsonLd);
+    const sourceListingId = extractListingId(url) ?? url;
+
+    return {
+      source: "manual",
+      source_listing_id: sourceListingId,
+      source_url: url,
+      address_line_1: address,
+      postcode: normalise(postcode),
+      city: null,
+      county: null,
+      latitude: null,
+      longitude: null,
+      property_type: propertyType,
+      bedrooms,
+      bathrooms: null,
+      floor_area_m2: null,
+      tenure: "unknown",
+      epc_rating: null,
+      listing_price: price,
+      listing_status: "active",
+      listed_at: new Date(),
+      raw_payload: { jsonLd, og, portal: pickPortal(url) },
+    };
   },
 };
+
+function pickPortal(url: string): string {
+  try {
+    const host = new URL(url).hostname.toLowerCase();
+    if (host.includes("rightmove.co.uk")) return "rightmove";
+    if (host.includes("zoopla.co.uk")) return "zoopla";
+    if (host.includes("purplebricks.co.uk")) return "purplebricks";
+  } catch {
+    // ignore
+  }
+  return "unknown";
+}
+
+function extractListingId(url: string): string | null {
+  const m = url.match(/\/(\d{6,})/);
+  return m?.[1] ?? null;
+}
+
+function extractJsonLd(html: string): unknown[] {
+  const out: unknown[] = [];
+  const re =
+    /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(html)) !== null) {
+    try {
+      const parsed = JSON.parse(m[1].trim()) as unknown;
+      if (Array.isArray(parsed)) out.push(...parsed);
+      else out.push(parsed);
+    } catch {
+      // ignore malformed JSON-LD blocks
+    }
+  }
+  return out;
+}
+
+function extractOpenGraph(html: string): Record<string, string> {
+  const tags: Record<string, string> = {};
+  const re =
+    /<meta\s+(?:property|name)=["']([^"']+)["']\s+content=["']([^"']*)["']/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(html)) !== null) {
+    if (!(m[1] in tags)) tags[m[1]] = m[2];
+  }
+  return tags;
+}
+
+function getRecord(value: unknown): Record<string, unknown> | null {
+  return typeof value === "object" && value !== null
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function pickAddress(jsonLd: unknown[]): string | null {
+  for (const item of jsonLd) {
+    const obj = getRecord(item);
+    if (!obj) continue;
+    const addr = obj.address;
+    if (typeof addr === "string") return addr;
+    const a = getRecord(addr);
+    if (a) {
+      const street = typeof a.streetAddress === "string" ? a.streetAddress : "";
+      const locality =
+        typeof a.addressLocality === "string" ? a.addressLocality : "";
+      const joined = [street, locality].filter(Boolean).join(", ");
+      if (joined) return joined;
+    }
+    if (typeof obj.name === "string") return obj.name;
+  }
+  return null;
+}
+
+function pickPostcode(jsonLd: unknown[]): string | null {
+  for (const item of jsonLd) {
+    const obj = getRecord(item);
+    if (!obj) continue;
+    const a = getRecord(obj.address);
+    if (a && typeof a.postalCode === "string" && a.postalCode.trim()) {
+      return a.postalCode;
+    }
+    const m = UK_POSTCODE_RE.exec(JSON.stringify(obj));
+    if (m) return m[1];
+  }
+  return null;
+}
+
+function scanPostcode(html: string): string | null {
+  const m = UK_POSTCODE_RE.exec(html);
+  return m?.[1] ?? null;
+}
+
+function pickPricePence(
+  jsonLd: unknown[],
+  og: Record<string, string>,
+): number | null {
+  for (const item of jsonLd) {
+    const obj = getRecord(item);
+    if (!obj) continue;
+    const offers = getRecord(obj.offers ?? obj.Offers);
+    if (offers) {
+      const p = offers.price;
+      if (typeof p === "number") return Math.round(p * 100);
+      if (typeof p === "string") {
+        const n = parseFloat(p);
+        if (!isNaN(n)) return Math.round(n * 100);
+      }
+    }
+    if (typeof obj.price === "number") return Math.round(obj.price * 100);
+  }
+  const candidate = og["og:price:amount"] ?? og["product:price:amount"];
+  if (candidate) {
+    const n = parseFloat(candidate);
+    if (!isNaN(n)) return Math.round(n * 100);
+  }
+  return null;
+}
+
+function pickBedrooms(jsonLd: unknown[]): number | null {
+  for (const item of jsonLd) {
+    const obj = getRecord(item);
+    if (!obj) continue;
+    if (typeof obj.numberOfBedrooms === "number") return obj.numberOfBedrooms;
+    if (typeof obj.numberOfRooms === "number") return obj.numberOfRooms;
+  }
+  return null;
+}
+
+function pickType(
+  jsonLd: unknown[],
+): NormalisedProperty["property_type"] {
+  for (const item of jsonLd) {
+    const obj = getRecord(item);
+    if (!obj) continue;
+    const type = String(obj["@type"] ?? "").toLowerCase();
+    if (type.includes("apartment") || type.includes("flat")) return "flat";
+    if (type.includes("terrace")) return "terrace";
+    if (type.includes("detached")) return "detached";
+    if (type.includes("house") || type.includes("residence")) return "semi";
+  }
+  return "other";
+}
+
+function normalise(pc: string): string {
+  return pc.replace(/\s+/g, "").toUpperCase();
+}
