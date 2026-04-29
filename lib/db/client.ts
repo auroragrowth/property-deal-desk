@@ -14,7 +14,12 @@ const url =
   process.env.DATABASE_URL ||
   "postgresql://placeholder:placeholder@localhost:5432/placeholder_set_DATABASE_URL";
 
-const client = globalThis.__dealdesk_pg__ ?? postgres(url, { prepare: false });
+// `ssl: "require"` is needed when running on Vercel against Supabase —
+// postgres-js's auto-negotiation sometimes silently fails in that environment.
+// `prepare: false` keeps us pgbouncer-compatible if we switch to the pooler URL.
+const client =
+  globalThis.__dealdesk_pg__ ??
+  postgres(url, { prepare: false, ssl: "require" });
 if (process.env.NODE_ENV !== "production") {
   globalThis.__dealdesk_pg__ = client;
 }
