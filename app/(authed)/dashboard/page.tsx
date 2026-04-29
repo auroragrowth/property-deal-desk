@@ -70,7 +70,7 @@ export default async function DashboardPage({
   ]);
 
   return (
-    <main className="bg-bg-page max-w-app mx-auto p-8">
+    <main id="main" className="bg-bg-page max-w-app mx-auto p-8">
       <header className="mb-8">
         <p className="text-accent mb-2 font-mono text-xs tracking-[0.18em] uppercase">
           03 / Dashboard

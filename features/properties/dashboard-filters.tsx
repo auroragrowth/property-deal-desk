@@ -23,7 +23,7 @@ const PRICE_OPTIONS = PRICE_BRACKETS_K.map((k) => ({
 const BED_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8] as const;
 
 const inputClass =
-  "border-border focus:border-border-focus text-text-primary placeholder:text-text-tertiary focus:ring-accent-soft h-10 w-full rounded-md border-[0.5px] bg-transparent px-3 text-sm focus:ring-[3px] focus:outline-none";
+  "border-border focus:border-border-focus text-text-primary placeholder:text-text-tertiary focus:ring-accent-soft h-11 w-full rounded-md border-[0.5px] bg-transparent px-3 text-sm focus:ring-[3px] focus:outline-none";
 
 const selectClass = `${inputClass} appearance-none bg-bg-surface bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 12 12%22><path fill=%22%236b5e4d%22 d=%22M2 4l4 4 4-4z%22/></svg>')] bg-[length:12px_12px] bg-[right_12px_center] bg-no-repeat pr-8`;
 
@@ -208,8 +208,9 @@ export function DashboardFilters() {
                   key={t.value}
                   type="button"
                   onClick={() => toggleType(t.value)}
+                  aria-pressed={active}
                   className={[
-                    "h-9 rounded-md border-[0.5px] px-3 text-xs font-medium",
+                    "h-11 rounded-md border-[0.5px] px-4 text-xs font-medium",
                     active
                       ? "bg-bg-strong text-text-on-strong border-transparent"
                       : "border-border-strong text-text-primary bg-transparent",
@@ -238,7 +239,7 @@ export function DashboardFilters() {
             <button
               type="button"
               onClick={reset}
-              className="text-text-secondary hover:text-text-primary h-10 text-sm font-medium underline-offset-2 hover:underline"
+              className="text-text-secondary hover:text-text-primary h-11 text-sm font-medium underline-offset-2 hover:underline"
             >
               Reset
             </button>
@@ -248,14 +249,14 @@ export function DashboardFilters() {
               type="button"
               onClick={saveCurrent}
               disabled={saving}
-              className="border-border-strong text-text-primary h-10 rounded-md border-[0.5px] bg-transparent px-4 text-sm font-medium disabled:opacity-50"
+              className="border-border-strong text-text-primary h-11 rounded-md border-[0.5px] bg-transparent px-4 text-sm font-medium disabled:opacity-50"
             >
               {saving ? "Saving…" : "Save search"}
             </button>
           )}
           <button
             type="submit"
-            className="bg-accent text-accent-on hover:bg-accent-hover active:bg-accent-pressed h-10 rounded-md px-5 text-sm font-medium"
+            className="bg-accent text-accent-on hover:bg-accent-hover active:bg-accent-pressed h-11 rounded-md px-5 text-sm font-medium"
           >
             Search
           </button>

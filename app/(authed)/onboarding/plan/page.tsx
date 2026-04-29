@@ -4,7 +4,7 @@ import { CheckoutButton } from "@/features/billing/checkout-button";
 export default function OnboardingPlanPage() {
   const plans = Object.values(PLANS);
   return (
-    <main className="bg-bg-page max-w-marketing mx-auto p-8">
+    <main id="main" className="bg-bg-page max-w-marketing mx-auto p-8">
       <header className="mb-10 text-center">
         <p className="text-accent mb-3 font-mono text-xs tracking-[0.18em] uppercase">
           02 / Pricing

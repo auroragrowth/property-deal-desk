@@ -28,7 +28,7 @@ export function ManageBillingButton() {
         type="button"
         onClick={go}
         disabled={loading}
-        className="border-border-strong text-text-primary hover:bg-bg-surface-2 h-10 rounded-md border-[0.5px] bg-transparent px-4 text-sm font-medium disabled:opacity-50"
+        className="border-border-strong text-text-primary hover:bg-bg-surface-2 h-11 rounded-md border-[0.5px] bg-transparent px-4 text-sm font-medium disabled:opacity-50"
       >
         {loading ? "Opening…" : "Manage billing"}
       </button>

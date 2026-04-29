@@ -102,7 +102,7 @@ export default async function DealPage({
     result === null ? "Pending" : result.pass ? "Pass" : "Fail";
 
   return (
-    <main className="bg-bg-page max-w-prose mx-auto p-8">
+    <main id="main" className="bg-bg-page max-w-prose mx-auto p-8">
       <Link
         href="/watchlist"
         className="text-text-secondary mb-4 inline-block text-xs underline-offset-2 hover:underline"

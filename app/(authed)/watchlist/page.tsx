@@ -61,7 +61,7 @@ export default async function WatchlistPage({
     limit === Number.POSITIVE_INFINITY ? "unlimited" : String(limit);
 
   return (
-    <main className="bg-bg-page max-w-app mx-auto p-8">
+    <main id="main" className="bg-bg-page max-w-app mx-auto p-8">
       <header className="mb-8 flex flex-wrap items-baseline justify-between gap-3">
         <div>
           <p className="text-accent mb-2 font-mono text-xs tracking-[0.18em] uppercase">
@@ -84,8 +84,9 @@ export default async function WatchlistPage({
             <Link
               key={s.value}
               href={s.value === "added" ? "/watchlist" : `/watchlist?sort=${s.value}`}
+              aria-current={active ? "page" : undefined}
               className={[
-                "h-9 rounded-md border-[0.5px] px-3 text-xs font-medium leading-9",
+                "inline-flex h-11 items-center rounded-md border-[0.5px] px-4 text-xs font-medium",
                 active
                   ? "bg-bg-strong text-text-on-strong border-transparent"
                   : "border-border-strong text-text-primary bg-transparent",

@@ -30,7 +30,7 @@ export function RemoveButton({ id }: { id: string }) {
         type="button"
         onClick={remove}
         disabled={pending}
-        className="text-text-secondary hover:text-fail-fg text-xs font-medium underline-offset-2 hover:underline disabled:opacity-50"
+        className="text-text-secondary hover:text-fail-fg inline-flex h-11 items-center px-2 text-xs font-medium underline-offset-2 hover:underline disabled:opacity-50"
       >
         {pending ? "Removing…" : "Remove"}
       </button>

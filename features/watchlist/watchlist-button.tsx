@@ -64,7 +64,7 @@ export function WatchlistButton({
         disabled={pending}
         aria-pressed={onList}
         className={[
-          "h-9 rounded-md border-[0.5px] px-3 text-xs font-medium disabled:opacity-50",
+          "h-11 rounded-md border-[0.5px] px-4 text-xs font-medium disabled:opacity-50",
           onList
             ? "bg-pass-bg text-pass-fg border-pass-border"
             : "border-border-strong text-text-primary bg-transparent",

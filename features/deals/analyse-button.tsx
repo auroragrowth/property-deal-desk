@@ -53,7 +53,7 @@ export function AnalyseButton({
         type="button"
         onClick={go}
         disabled={pending}
-        className={`h-9 rounded-md px-3 text-xs font-medium disabled:opacity-50 ${klass}`}
+        className={`h-11 rounded-md px-4 text-xs font-medium disabled:opacity-50 ${klass}`}
       >
         {pending ? "Analysing…" : "Analyse →"}
       </button>

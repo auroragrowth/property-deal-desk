@@ -55,7 +55,7 @@ export function CheckoutButton({
         type="button"
         onClick={go}
         disabled={loading}
-        className={`h-10 w-full rounded-md px-4 text-sm font-medium disabled:opacity-50 ${VARIANT_CLASSES[variant]}`}
+        className={`h-11 w-full rounded-md px-4 text-sm font-medium disabled:opacity-50 ${VARIANT_CLASSES[variant]}`}
       >
         {loading ? "Redirecting…" : "Start 14-day trial"}
       </button>

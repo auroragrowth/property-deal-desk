@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default async function WelcomePage() {
   return (
-    <main className="bg-bg-page mx-auto max-w-prose p-12 text-center">
+    <main id="main" className="bg-bg-page mx-auto max-w-prose p-12 text-center">
       <p className="text-text-tertiary mb-3 font-mono text-xs tracking-[0.18em] uppercase">
         02 / Welcome
       </p>

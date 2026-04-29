@@ -17,13 +17,13 @@ export default function MarketingPage() {
       <div className="mt-2 flex gap-3">
         <Link
           href="/sign-up"
-          className="bg-accent text-accent-on hover:bg-accent-hover active:bg-accent-pressed inline-flex h-11 items-center rounded-md px-6 text-sm font-medium"
+          className="bg-accent text-accent-on hover:bg-accent-hover active:bg-accent-pressed focus-visible:ring-accent-soft inline-flex h-11 items-center rounded-md px-6 text-sm font-medium focus-visible:ring-[3px] focus-visible:outline-none"
         >
           Start free trial
         </Link>
         <Link
           href="/sign-in"
-          className="border-border-strong text-text-primary hover:bg-bg-surface-2 inline-flex h-11 items-center rounded-md border-[0.5px] px-5 text-sm font-medium"
+          className="border-border-strong text-text-primary hover:bg-bg-surface-2 focus-visible:ring-accent-soft inline-flex h-11 items-center rounded-md border-[0.5px] px-5 text-sm font-medium focus-visible:ring-[3px] focus-visible:outline-none"
         >
           Sign in
         </Link>

@@ -16,7 +16,7 @@ export default async function SettingsPage() {
   });
 
   return (
-    <main className="bg-bg-page mx-auto max-w-prose p-8">
+    <main id="main" className="bg-bg-page mx-auto max-w-prose p-8">
       <header className="mb-8">
         <p className="text-text-tertiary mb-2 font-mono text-xs tracking-[0.18em] uppercase">
           05 / Settings

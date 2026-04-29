@@ -38,7 +38,7 @@ export function SavedFilterChips({ items }: { items: SavedFilter[] }) {
           <span
             key={item.id}
             className={[
-              "inline-flex items-center gap-1 rounded-md border-[0.5px] pl-3",
+              "inline-flex h-11 items-center rounded-md border-[0.5px]",
               active
                 ? "bg-bg-strong text-text-on-strong border-transparent"
                 : "border-border-strong text-text-primary bg-transparent",
@@ -46,7 +46,8 @@ export function SavedFilterChips({ items }: { items: SavedFilter[] }) {
           >
             <Link
               href={qs ? `/dashboard?${qs}` : "/dashboard"}
-              className="py-1.5 text-xs font-medium"
+              aria-current={active ? "page" : undefined}
+              className="flex h-full items-center pl-4 text-xs font-medium"
             >
               {item.name}
             </Link>
@@ -55,7 +56,7 @@ export function SavedFilterChips({ items }: { items: SavedFilter[] }) {
               onClick={() => remove(item.id)}
               disabled={pendingId === item.id}
               className={[
-                "h-7 w-7 rounded-md text-[10px] disabled:opacity-50",
+                "flex h-11 w-11 items-center justify-center rounded-md text-[10px] disabled:opacity-50",
                 active ? "hover:bg-white/10" : "hover:bg-bg-surface-2",
               ].join(" ")}
               aria-label={`Delete saved filter ${item.name}`}

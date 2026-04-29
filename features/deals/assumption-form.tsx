@@ -20,7 +20,7 @@ type CriteriaDefaults = {
 };
 
 const fieldClass =
-  "border-border focus:border-border-focus text-text-primary placeholder:text-text-tertiary focus:ring-accent-soft h-10 w-full rounded-md border-[0.5px] bg-transparent px-3 text-sm focus:ring-[3px] focus:outline-none";
+  "border-border focus:border-border-focus text-text-primary placeholder:text-text-tertiary focus:ring-accent-soft h-11 w-full rounded-md border-[0.5px] bg-transparent px-3 text-sm focus:ring-[3px] focus:outline-none";
 
 const labelClass =
   "text-text-secondary mb-1 block text-[11px] font-medium tracking-wide uppercase";
@@ -263,7 +263,7 @@ export function AssumptionForm({
           <button
             type="submit"
             disabled={pending}
-            className="bg-accent text-accent-on hover:bg-accent-hover active:bg-accent-pressed h-10 rounded-md px-5 text-sm font-medium disabled:opacity-50"
+            className="bg-accent text-accent-on hover:bg-accent-hover active:bg-accent-pressed h-11 rounded-md px-5 text-sm font-medium disabled:opacity-50"
           >
             {pending ? "Re-running…" : "Re-run analysis"}
           </button>

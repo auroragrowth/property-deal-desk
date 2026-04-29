@@ -51,12 +51,12 @@ export function PasteForm() {
           onChange={(e) => setUrl(e.target.value)}
           placeholder="https://www.rightmove.co.uk/properties/..."
           required
-          className="border-border focus:border-border-focus text-text-primary placeholder:text-text-tertiary focus:ring-accent-soft h-10 flex-1 rounded-md border-[0.5px] bg-transparent px-3 text-sm focus:ring-[3px] focus:outline-none"
+          className="border-border focus:border-border-focus text-text-primary placeholder:text-text-tertiary focus:ring-accent-soft h-11 flex-1 rounded-md border-[0.5px] bg-transparent px-3 text-sm focus:ring-[3px] focus:outline-none"
         />
         <button
           type="submit"
           disabled={loading || !url}
-          className="bg-bg-strong text-text-on-strong h-10 rounded-md px-5 text-sm font-medium disabled:opacity-50"
+          className="bg-bg-strong text-text-on-strong h-11 rounded-md px-5 text-sm font-medium disabled:opacity-50"
         >
           {loading ? "Fetching…" : "Add property"}
         </button>
