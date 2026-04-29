@@ -1,5 +1,6 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { Topbar } from "@/features/auth/topbar";
 
 export default async function AuthedLayout({
   children,
@@ -8,5 +9,10 @@ export default async function AuthedLayout({
 }) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
-  return <>{children}</>;
+  return (
+    <>
+      <Topbar />
+      {children}
+    </>
+  );
 }

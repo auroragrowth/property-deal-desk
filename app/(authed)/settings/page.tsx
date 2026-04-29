@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { UserButton } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
@@ -18,14 +17,11 @@ export default async function SettingsPage() {
 
   return (
     <main className="bg-bg-page mx-auto max-w-prose p-8">
-      <header className="mb-8 flex items-center justify-between">
-        <div>
-          <p className="text-text-tertiary mb-2 font-mono text-xs tracking-[0.18em] uppercase">
-            05 / Settings
-          </p>
-          <h1 className="text-text-primary font-serif text-3xl">Account</h1>
-        </div>
-        <UserButton />
+      <header className="mb-8">
+        <p className="text-text-tertiary mb-2 font-mono text-xs tracking-[0.18em] uppercase">
+          05 / Settings
+        </p>
+        <h1 className="text-text-primary font-serif text-3xl">Account</h1>
       </header>
 
       <section className="mb-10">
