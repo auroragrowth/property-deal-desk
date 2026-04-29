@@ -49,10 +49,11 @@ export const manualPasteAdapter: PropertyFeedAdapter = {
     const address =
       pickAddress(jsonLd) ?? og["og:title"] ?? "Unknown address";
     const postcode = pickPostcode(jsonLd) ?? scanPostcode(html) ?? "";
-    const price = pickPricePence(jsonLd, og) ?? 0;
+    const price = pickPricePence(jsonLd, og, html) ?? 0;
     const bedrooms = pickBedrooms(jsonLd) ?? 0;
     const propertyType = pickType(jsonLd);
     const sourceListingId = extractListingId(url) ?? url;
+    void html; // referenced via pickPricePence below
 
     return {
       source: "manual",
@@ -170,7 +171,9 @@ function scanPostcode(html: string): string | null {
 function pickPricePence(
   jsonLd: unknown[],
   og: Record<string, string>,
+  html: string,
 ): number | null {
+  // 1. JSON-LD offers
   for (const item of jsonLd) {
     const obj = getRecord(item);
     if (!obj) continue;
@@ -185,12 +188,56 @@ function pickPricePence(
     }
     if (typeof obj.price === "number") return Math.round(obj.price * 100);
   }
-  const candidate = og["og:price:amount"] ?? og["product:price:amount"];
-  if (candidate) {
-    const n = parseFloat(candidate);
+
+  // 2. Open Graph price
+  const ogPrice = og["og:price:amount"] ?? og["product:price:amount"];
+  if (ogPrice) {
+    const n = parseFloat(ogPrice);
     if (!isNaN(n)) return Math.round(n * 100);
   }
+
+  // 3. Page <title> — Rightmove/Zoopla typically embed "...£250,000..."
+  const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  if (titleMatch) {
+    const t = poundToPence(titleMatch[1]);
+    if (t) return t;
+  }
+
+  // 4. og:title (same pattern)
+  if (og["og:title"]) {
+    const t = poundToPence(og["og:title"]);
+    if (t) return t;
+  }
+
+  // 5. og:description
+  if (og["og:description"]) {
+    const t = poundToPence(og["og:description"]);
+    if (t) return t;
+  }
+
+  // 6. h1 contents
+  const h1Match = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
+  if (h1Match) {
+    const t = poundToPence(h1Match[1]);
+    if (t) return t;
+  }
+
+  // 7. First plausible £-prefixed number in the body (>= £1,000)
+  const bodyMatch = html.match(/£\s?(\d{1,3}(?:,\d{3})+|\d{4,})(?:\.\d+)?/);
+  if (bodyMatch) {
+    const n = parseFloat(bodyMatch[1].replace(/,/g, ""));
+    if (!isNaN(n) && n >= 1000) return Math.round(n * 100);
+  }
+
   return null;
+}
+
+function poundToPence(text: string): number | null {
+  const m = text.match(/£\s?(\d{1,3}(?:,\d{3})+|\d{4,})(?:\.\d+)?/);
+  if (!m) return null;
+  const n = parseFloat(m[1].replace(/,/g, ""));
+  if (isNaN(n) || n < 1000) return null;
+  return Math.round(n * 100);
 }
 
 function pickBedrooms(jsonLd: unknown[]): number | null {
