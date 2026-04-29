@@ -24,16 +24,17 @@ export function WatchlistButton({
         const res = await fetch(`/api/watchlist/${watchlistItemId}`, {
           method: "DELETE",
         });
-        if (!res.ok) throw new Error("Could not remove");
+        if (!res.ok) {
+          throw new Error(await readErr(res, "Could not remove"));
+        }
       } else {
         const res = await fetch("/api/watchlist", {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ propertyId }),
         });
-        const data = (await res.json()) as { error?: { message?: string } };
         if (!res.ok) {
-          throw new Error(data?.error?.message ?? "Could not save");
+          throw new Error(await readErr(res, "Could not save"));
         }
       }
       router.refresh();
@@ -41,6 +42,17 @@ export function WatchlistButton({
       setError((e as Error).message);
     } finally {
       setPending(false);
+    }
+  }
+
+  async function readErr(res: Response, fallback: string): Promise<string> {
+    const text = await res.text().catch(() => "");
+    if (!text) return `${fallback} (HTTP ${res.status})`;
+    try {
+      const data = JSON.parse(text) as { error?: { message?: string } };
+      return data?.error?.message ?? fallback;
+    } catch {
+      return text.length < 200 ? text : `${fallback} (HTTP ${res.status})`;
     }
   }
 

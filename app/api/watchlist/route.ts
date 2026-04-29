@@ -9,6 +9,7 @@ import {
   watchlistCount,
 } from "@/features/watchlist/queries";
 import { emit } from "@/lib/events";
+import { ensureLocalUser } from "@/lib/users/ensure-local";
 
 export async function GET(req: NextRequest) {
   const { userId } = await auth();
@@ -29,61 +30,76 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json(
-      { error: { code: "auth", message: "Unauthorized" } },
-      { status: 401 },
-    );
-  }
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json(
+        { error: { code: "auth", message: "Unauthorized" } },
+        { status: 401 },
+      );
+    }
 
-  const body = (await req.json().catch(() => ({}))) as {
-    propertyId?: unknown;
-    note?: unknown;
-  };
-  const propertyId =
-    typeof body.propertyId === "string" ? body.propertyId : "";
-  const note =
-    typeof body.note === "string" ? body.note.slice(0, 280) : null;
-  if (!propertyId) {
-    return NextResponse.json(
-      { error: { code: "validation", message: "propertyId required" } },
-      { status: 400 },
-    );
-  }
+    const body = (await req.json().catch(() => ({}))) as {
+      propertyId?: unknown;
+      note?: unknown;
+    };
+    const propertyId =
+      typeof body.propertyId === "string" ? body.propertyId : "";
+    const note =
+      typeof body.note === "string" ? body.note.slice(0, 280) : null;
+    if (!propertyId) {
+      return NextResponse.json(
+        { error: { code: "validation", message: "propertyId required" } },
+        { status: 400 },
+      );
+    }
 
-  // Plan limit (brief §08, principle 4)
-  const ent = await getEntitlements(userId);
-  const current = await watchlistCount(userId);
-  if (current >= ent.maxWatchlistItems) {
-    return NextResponse.json(
-      {
-        error: {
-          code: "limit",
-          message: `Watchlist limit reached (${ent.maxWatchlistItems} on ${ent.plan}). Upgrade for more.`,
+    // FK to users.clerk_id requires the local row exists.
+    await ensureLocalUser(userId);
+
+    // Plan limit (brief §08, principle 4)
+    const ent = await getEntitlements(userId);
+    const current = await watchlistCount(userId);
+    if (current >= ent.maxWatchlistItems) {
+      return NextResponse.json(
+        {
+          error: {
+            code: "limit",
+            message: `Watchlist limit reached (${ent.maxWatchlistItems} on ${ent.plan}). Upgrade for more.`,
+          },
         },
-      },
-      { status: 403 },
-    );
-  }
+        { status: 403 },
+      );
+    }
 
-  const [item] = await db
-    .insert(watchlist)
-    .values({ userId, propertyId, note })
-    .onConflictDoNothing({
-      target: [watchlist.userId, watchlist.propertyId],
-    })
-    .returning();
+    const [item] = await db
+      .insert(watchlist)
+      .values({ userId, propertyId, note })
+      .onConflictDoNothing({
+        target: [watchlist.userId, watchlist.propertyId],
+      })
+      .returning();
 
-  if (item) {
-    await emit("watchlist.added", { userId, propertyId });
-  } else {
+    if (item) {
+      await emit("watchlist.added", { userId, propertyId });
+      return NextResponse.json({ item });
+    }
+
     // Already on watchlist — return the existing row.
     const existing = await db.query.watchlist.findFirst({
       where: eq(watchlist.propertyId, propertyId),
     });
     return NextResponse.json({ item: existing ?? null });
+  } catch (err) {
+    console.error("[watchlist POST]", err);
+    return NextResponse.json(
+      {
+        error: {
+          code: "server",
+          message: (err as Error).message ?? "Server error",
+        },
+      },
+      { status: 500 },
+    );
   }
-
-  return NextResponse.json({ item });
 }

@@ -13,7 +13,10 @@ export function RemoveButton({ id }: { id: string }) {
     setError(null);
     try {
       const res = await fetch(`/api/watchlist/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Could not remove");
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(text || `Could not remove (HTTP ${res.status})`);
+      }
       router.refresh();
     } catch (e) {
       setError((e as Error).message);
