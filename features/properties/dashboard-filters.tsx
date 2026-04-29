@@ -10,8 +10,22 @@ const PROPERTY_TYPES = [
   { value: "detached", label: "Detached" },
 ] as const;
 
+const PRICE_BRACKETS_K = [
+  50, 75, 100, 125, 150, 175, 200, 225, 250, 275, 300, 325, 350, 400, 450, 500,
+  600, 700, 800, 900, 1000, 1250, 1500, 2000, 3000, 5000,
+] as const;
+
+const PRICE_OPTIONS = PRICE_BRACKETS_K.map((k) => ({
+  value: String(k * 1000),
+  label: k >= 1000 ? `£${k / 1000}m` : `£${k}k`,
+}));
+
+const BED_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8] as const;
+
 const inputClass =
   "border-border focus:border-border-focus text-text-primary placeholder:text-text-tertiary focus:ring-accent-soft h-10 w-full rounded-md border-[0.5px] bg-transparent px-3 text-sm focus:ring-[3px] focus:outline-none";
+
+const selectClass = `${inputClass} appearance-none bg-bg-surface bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 12 12%22><path fill=%22%236b5e4d%22 d=%22M2 4l4 4 4-4z%22/></svg>')] bg-[length:12px_12px] bg-[right_12px_center] bg-no-repeat pr-8`;
 
 const labelClass =
   "text-text-secondary mb-1.5 block text-xs font-medium tracking-wide uppercase";
@@ -84,56 +98,68 @@ export function DashboardFilters() {
         </div>
 
         <div>
-          <label className={labelClass}>Price (£)</label>
-          <div className="flex gap-2">
-            <input
-              type="number"
-              inputMode="numeric"
-              min={0}
-              step={5000}
+          <label className={labelClass}>Price</label>
+          <div className="flex items-center gap-2">
+            <select
+              aria-label="Minimum price"
               value={priceMin}
               onChange={(e) => setPriceMin(e.target.value)}
-              placeholder="No min"
-              className={inputClass}
-            />
-            <span className="text-text-tertiary self-center text-sm">–</span>
-            <input
-              type="number"
-              inputMode="numeric"
-              min={0}
-              step={5000}
+              className={selectClass}
+            >
+              <option value="">No min</option>
+              {PRICE_OPTIONS.map((p) => (
+                <option key={p.value} value={p.value}>
+                  {p.label}
+                </option>
+              ))}
+            </select>
+            <span className="text-text-tertiary text-sm">–</span>
+            <select
+              aria-label="Maximum price"
               value={priceMax}
               onChange={(e) => setPriceMax(e.target.value)}
-              placeholder="No max"
-              className={inputClass}
-            />
+              className={selectClass}
+            >
+              <option value="">No max</option>
+              {PRICE_OPTIONS.map((p) => (
+                <option key={p.value} value={p.value}>
+                  {p.label}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
         <div>
           <label className={labelClass}>Bedrooms</label>
-          <div className="flex gap-2">
-            <input
-              type="number"
-              inputMode="numeric"
-              min={0}
-              max={20}
+          <div className="flex items-center gap-2">
+            <select
+              aria-label="Minimum bedrooms"
               value={bedsMin}
               onChange={(e) => setBedsMin(e.target.value)}
-              placeholder="No min"
-              className={inputClass}
-            />
-            <span className="text-text-tertiary self-center text-sm">–</span>
-            <input
-              type="number"
-              inputMode="numeric"
-              min={0}
-              max={20}
+              className={selectClass}
+            >
+              <option value="">No min</option>
+              {BED_OPTIONS.map((n) => (
+                <option key={n} value={String(n)}>
+                  {n}+
+                </option>
+              ))}
+            </select>
+            <span className="text-text-tertiary text-sm">–</span>
+            <select
+              aria-label="Maximum bedrooms"
               value={bedsMax}
               onChange={(e) => setBedsMax(e.target.value)}
-              placeholder="No max"
-              className={inputClass}
-            />
+              className={selectClass}
+            >
+              <option value="">No max</option>
+              {BED_OPTIONS.map((n) => (
+                <option key={n} value={String(n)}>
+                  {n}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
