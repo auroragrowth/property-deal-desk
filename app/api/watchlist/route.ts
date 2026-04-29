@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
 import { watchlist } from "@/lib/db/schema";
@@ -85,9 +85,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ item });
     }
 
-    // Already on watchlist — return the existing row.
+    // Already on watchlist — return the existing row scoped to this user.
+    // (Cross-tenant guard: never query watchlist by propertyId alone — two
+    // users can have the same property and we'd leak the other user's note.)
     const existing = await db.query.watchlist.findFirst({
-      where: eq(watchlist.propertyId, propertyId),
+      where: and(
+        eq(watchlist.userId, userId),
+        eq(watchlist.propertyId, propertyId),
+      ),
     });
     return NextResponse.json({ item: existing ?? null });
   } catch (err) {
