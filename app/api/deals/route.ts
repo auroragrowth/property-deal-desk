@@ -30,7 +30,9 @@ export async function POST(req: NextRequest) {
 
     await ensureLocalUser(userId);
 
-    const { deal, result } = await analyseProperty(userId, propertyId, strategy);
+    const { deal, result } = await analyseProperty(userId, propertyId, {
+      strategy,
+    });
 
     return NextResponse.json({ dealId: deal.id, resultId: result.id });
   } catch (err) {

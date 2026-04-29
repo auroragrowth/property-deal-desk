@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
-import { getDealView } from "@/features/deals/queries";
+import { getDealView, type DealResultView } from "@/features/deals/queries";
 import { fmtPenceShort, fmtPercent } from "@/lib/btl/calc";
+import { AssumptionForm } from "@/features/deals/assumption-form";
 
 const formatPostcode = (pc: string) => {
   if (pc.length <= 4) return pc;
@@ -46,7 +47,40 @@ export default async function DealPage({
 
   const view = await getDealView(id, userId);
   if (!view) notFound();
-  const { property, result } = view;
+  const { property, result, history } = view;
+
+  // Defaults for the assumption form: prefer the latest run's snapshot.
+  const lastSnap =
+    (result?.assumptionSnapshot ?? {}) as {
+      assumptions?: {
+        deposit_pct?: number;
+        rate_pct?: number;
+        mgmt_pct?: number;
+        void_pct?: number;
+        refurb?: number;
+        legal_fees?: number;
+        rent_pcm?: number | null;
+      };
+      criteria?: {
+        min_cashflow?: number;
+        min_roi?: number;
+        max_cash_required?: number;
+      };
+    };
+  const formAssumptions = {
+    deposit_pct: lastSnap.assumptions?.deposit_pct ?? 0.25,
+    rate_pct: lastSnap.assumptions?.rate_pct ?? 0.0549,
+    mgmt_pct: lastSnap.assumptions?.mgmt_pct ?? 0.1,
+    void_pct: lastSnap.assumptions?.void_pct ?? 0.05,
+    refurb_pence: lastSnap.assumptions?.refurb ?? 0,
+    legal_fees_pence: lastSnap.assumptions?.legal_fees ?? 200000,
+    rent_pcm_pence: lastSnap.assumptions?.rent_pcm ?? null,
+  };
+  const formCriteria = {
+    min_cashflow_pence: lastSnap.criteria?.min_cashflow ?? 20000,
+    min_roi_pct: lastSnap.criteria?.min_roi ?? 0.08,
+    max_cash_required_pence: lastSnap.criteria?.max_cash_required ?? 5000000,
+  };
 
   let host = "";
   try {
@@ -213,16 +247,64 @@ export default async function DealPage({
         </section>
       )}
 
+      {/* Inline assumption editor */}
+      <section className="mt-8">
+        <AssumptionForm
+          dealId={view.dealId}
+          assumptions={formAssumptions}
+          criteria={formCriteria}
+        />
+      </section>
+
+      {/* Result history */}
+      {history.length > 0 && (
+        <section className="mt-8">
+          <h2 className="text-text-primary mb-3 font-serif text-xl">
+            Previous runs
+          </h2>
+          <ol className="border-border bg-bg-surface divide-border divide-y rounded-lg border-[0.5px]">
+            {history.map((h) => (
+              <HistoryRow key={h.id} run={h} />
+            ))}
+          </ol>
+        </section>
+      )}
+
       <p className="text-text-tertiary mt-8 text-xs">
-        Indicative analysis only. Not regulated advice. Inline assumption
-        editing ships in week 10 — change defaults via{" "}
-        <Link href="/settings" className="underline underline-offset-2">
-          Settings
-        </Link>{" "}
-        when that lands. Engine version{" "}
+        Indicative analysis only. Not regulated advice. Engine version{" "}
         <span className="font-mono">{result?.engineVersion ?? "—"}</span>.
+        Every re-run inserts a new history row — previous results are kept.
       </p>
     </main>
+  );
+}
+
+function HistoryRow({ run }: { run: DealResultView }) {
+  const o = (run.outputs ?? {}) as Outputs;
+  const when = run.calculatedAt
+    ? new Date(run.calculatedAt).toLocaleString("en-GB", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      })
+    : "";
+  return (
+    <li className="flex items-baseline justify-between gap-3 px-4 py-3 text-sm">
+      <span className="text-text-tertiary font-mono text-[11px] tracking-wide">
+        {when}
+      </span>
+      <span className="text-text-primary">
+        {fmtPenceShort(o.monthly_cashflow ?? 0)}/mo ·{" "}
+        {fmtPercent(o.cash_on_cash_roi ?? 0)} ROI
+      </span>
+      <span
+        className={[
+          "font-mono text-[10px] tracking-[0.12em] uppercase",
+          run.pass ? "text-pass-fg" : "text-fail-fg",
+        ].join(" ")}
+      >
+        {run.pass ? "Pass" : "Fail"}
+      </span>
+    </li>
   );
 }
 

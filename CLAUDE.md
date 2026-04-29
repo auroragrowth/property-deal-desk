@@ -104,8 +104,8 @@ If a feature isn't on the brief's "definitely in scope" list (§01), don't build
 - ✅ Week 7: watchlist (add/remove from feed, sort, plan-gated via getEntitlements with Pro-trial fallback for pre-Stripe users)
 - ✅ Week 8: BTL engine (mortgage, stamp duty, ROI, gross yield, +2% stress) + assumption/criteria profiles with seeded defaults
 - ✅ Week 9: deal analyser page (verdict, KPI grid, stress card, reasons, numbers detail)
+- ✅ Week 10: inline assumption editing on the deal page + per-run history (append-only deal_results)
 - ⏳ Week 6: saved filters + filter chips
-- ⏳ Week 10: inline assumption editing + result history
 - ⏳ Weeks 11–12: per brief §12
 
 When a week's deliverables ship, update the markers above and commit.

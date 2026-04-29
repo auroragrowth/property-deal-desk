@@ -2,6 +2,17 @@ import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { dealResults, deals, properties, propertyListings } from "@/lib/db/schema";
 
+export type DealResultView = {
+  id: string;
+  engineVersion: string;
+  outputs: Record<string, unknown>;
+  pass: boolean;
+  passReasons: string[];
+  failReasons: string[];
+  calculatedAt: Date | null;
+  assumptionSnapshot: Record<string, unknown>;
+};
+
 export type DealView = {
   dealId: string;
   strategy: string;
@@ -15,15 +26,8 @@ export type DealView = {
     imageUrl: string | null;
     sourceUrl: string | null;
   };
-  result: {
-    id: string;
-    engineVersion: string;
-    outputs: Record<string, unknown>;
-    pass: boolean;
-    passReasons: string[];
-    failReasons: string[];
-    calculatedAt: Date | null;
-  } | null;
+  result: DealResultView | null;
+  history: DealResultView[];
 };
 
 export async function getDealView(
@@ -44,13 +48,23 @@ export async function getDealView(
     where: eq(propertyListings.propertyId, deal.propertyId),
   });
 
-  const latestResult = await db
+  const allResults = await db
     .select()
     .from(dealResults)
     .where(eq(dealResults.dealId, dealId))
     .orderBy(desc(dealResults.calculatedAt))
-    .limit(1);
-  const result = latestResult[0] ?? null;
+    .limit(10);
+
+  const mapped: DealResultView[] = allResults.map((r) => ({
+    id: r.id,
+    engineVersion: r.engineVersion,
+    outputs: r.outputs as Record<string, unknown>,
+    pass: r.pass,
+    passReasons: r.passReasons,
+    failReasons: r.failReasons,
+    calculatedAt: r.calculatedAt,
+    assumptionSnapshot: r.assumptionSnapshot as Record<string, unknown>,
+  }));
 
   return {
     dealId: deal.id,
@@ -65,16 +79,7 @@ export async function getDealView(
       imageUrl: property.imageUrl,
       sourceUrl: listing?.sourceUrl ?? null,
     },
-    result: result
-      ? {
-          id: result.id,
-          engineVersion: result.engineVersion,
-          outputs: result.outputs as Record<string, unknown>,
-          pass: result.pass,
-          passReasons: result.passReasons,
-          failReasons: result.failReasons,
-          calculatedAt: result.calculatedAt,
-        }
-      : null,
+    result: mapped[0] ?? null,
+    history: mapped.slice(1),
   };
 }

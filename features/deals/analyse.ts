@@ -8,14 +8,25 @@ import {
   toAssumption,
   toCriteria,
 } from "./profiles";
-import type { EngineProperty } from "./engines/_interface";
+import type {
+  AssumptionProfile,
+  CriteriaProfile,
+  EngineProperty,
+} from "./engines/_interface";
 import { emit } from "@/lib/events";
+
+export type AnalyseOptions = {
+  strategy?: string;
+  assumptionOverrides?: Partial<AssumptionProfile>;
+  criteriaOverrides?: Partial<CriteriaProfile>;
+};
 
 export async function analyseProperty(
   userId: string,
   propertyId: string,
-  strategy: string = "btl",
+  options: AnalyseOptions = {},
 ) {
+  const strategy = options.strategy ?? "btl";
   const property = await db.query.properties.findFirst({
     where: eq(properties.id, propertyId),
   });
@@ -60,8 +71,14 @@ export async function analyseProperty(
     property_type: property.propertyType ?? "other",
   };
 
-  const assumptions = toAssumption(assumptionRow);
-  const criteria = toCriteria(criteriaRow);
+  const assumptions: AssumptionProfile = {
+    ...toAssumption(assumptionRow),
+    ...(options.assumptionOverrides ?? {}),
+  };
+  const criteria: CriteriaProfile = {
+    ...toCriteria(criteriaRow),
+    ...(options.criteriaOverrides ?? {}),
+  };
 
   const result = engine.run(engineProperty, assumptions, criteria);
 
