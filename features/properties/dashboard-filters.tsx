@@ -1,0 +1,195 @@
+"use client";
+
+import { useRouter, useSearchParams } from "next/navigation";
+import { type FormEvent, useState } from "react";
+
+const PROPERTY_TYPES = [
+  { value: "flat", label: "Flat" },
+  { value: "terrace", label: "Terrace" },
+  { value: "semi", label: "Semi" },
+  { value: "detached", label: "Detached" },
+] as const;
+
+const inputClass =
+  "border-border focus:border-border-focus text-text-primary placeholder:text-text-tertiary focus:ring-accent-soft h-10 w-full rounded-md border-[0.5px] bg-transparent px-3 text-sm focus:ring-[3px] focus:outline-none";
+
+const labelClass =
+  "text-text-secondary mb-1.5 block text-xs font-medium tracking-wide uppercase";
+
+export function DashboardFilters() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const [postcode, setPostcode] = useState(searchParams.get("postcode") ?? "");
+  const [priceMin, setPriceMin] = useState(searchParams.get("priceMin") ?? "");
+  const [priceMax, setPriceMax] = useState(searchParams.get("priceMax") ?? "");
+  const [bedsMin, setBedsMin] = useState(searchParams.get("bedsMin") ?? "");
+  const [bedsMax, setBedsMax] = useState(searchParams.get("bedsMax") ?? "");
+  const [types, setTypes] = useState<string[]>(searchParams.getAll("type"));
+  const [includeOffer, setIncludeOffer] = useState(
+    searchParams.get("status") === "all",
+  );
+
+  function submit(e: FormEvent) {
+    e.preventDefault();
+    const params = new URLSearchParams();
+    if (postcode.trim()) params.set("postcode", postcode.trim());
+    if (priceMin) params.set("priceMin", priceMin);
+    if (priceMax) params.set("priceMax", priceMax);
+    if (bedsMin) params.set("bedsMin", bedsMin);
+    if (bedsMax) params.set("bedsMax", bedsMax);
+    types.forEach((t) => params.append("type", t));
+    if (includeOffer) params.set("status", "all");
+    const qs = params.toString();
+    router.push(qs ? `/dashboard?${qs}` : "/dashboard");
+  }
+
+  function reset() {
+    setPostcode("");
+    setPriceMin("");
+    setPriceMax("");
+    setBedsMin("");
+    setBedsMax("");
+    setTypes([]);
+    setIncludeOffer(false);
+    router.push("/dashboard");
+  }
+
+  function toggleType(value: string) {
+    setTypes((t) =>
+      t.includes(value) ? t.filter((x) => x !== value) : [...t, value],
+    );
+  }
+
+  const isFiltered = Array.from(searchParams.keys()).length > 0;
+
+  return (
+    <form
+      onSubmit={submit}
+      className="bg-bg-surface border-border rounded-lg border-[0.5px] p-5"
+    >
+      <div className="grid gap-4 md:grid-cols-2">
+        <div>
+          <label htmlFor="f-postcode" className={labelClass}>
+            Area / Postcode
+          </label>
+          <input
+            id="f-postcode"
+            type="text"
+            value={postcode}
+            onChange={(e) => setPostcode(e.target.value)}
+            placeholder="e.g. PE1, IP11, or full postcode"
+            className={inputClass}
+          />
+        </div>
+
+        <div>
+          <label className={labelClass}>Price (£)</label>
+          <div className="flex gap-2">
+            <input
+              type="number"
+              inputMode="numeric"
+              min={0}
+              step={5000}
+              value={priceMin}
+              onChange={(e) => setPriceMin(e.target.value)}
+              placeholder="No min"
+              className={inputClass}
+            />
+            <span className="text-text-tertiary self-center text-sm">–</span>
+            <input
+              type="number"
+              inputMode="numeric"
+              min={0}
+              step={5000}
+              value={priceMax}
+              onChange={(e) => setPriceMax(e.target.value)}
+              placeholder="No max"
+              className={inputClass}
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className={labelClass}>Bedrooms</label>
+          <div className="flex gap-2">
+            <input
+              type="number"
+              inputMode="numeric"
+              min={0}
+              max={20}
+              value={bedsMin}
+              onChange={(e) => setBedsMin(e.target.value)}
+              placeholder="No min"
+              className={inputClass}
+            />
+            <span className="text-text-tertiary self-center text-sm">–</span>
+            <input
+              type="number"
+              inputMode="numeric"
+              min={0}
+              max={20}
+              value={bedsMax}
+              onChange={(e) => setBedsMax(e.target.value)}
+              placeholder="No max"
+              className={inputClass}
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className={labelClass}>Type</label>
+          <div className="flex flex-wrap gap-2">
+            {PROPERTY_TYPES.map((t) => {
+              const active = types.includes(t.value);
+              return (
+                <button
+                  key={t.value}
+                  type="button"
+                  onClick={() => toggleType(t.value)}
+                  className={[
+                    "h-9 rounded-md border-[0.5px] px-3 text-xs font-medium",
+                    active
+                      ? "bg-bg-strong text-text-on-strong border-transparent"
+                      : "border-border-strong text-text-primary bg-transparent",
+                  ].join(" ")}
+                >
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-5 flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center">
+        <label className="text-text-secondary flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={includeOffer}
+            onChange={(e) => setIncludeOffer(e.target.checked)}
+            className="accent-accent h-4 w-4"
+          />
+          Include Under Offer / Sold STC
+        </label>
+        <div className="flex gap-2">
+          {isFiltered && (
+            <button
+              type="button"
+              onClick={reset}
+              className="text-text-secondary hover:text-text-primary h-10 text-sm font-medium underline-offset-2 hover:underline"
+            >
+              Reset
+            </button>
+          )}
+          <button
+            type="submit"
+            className="bg-accent text-accent-on hover:bg-accent-hover active:bg-accent-pressed h-10 rounded-md px-5 text-sm font-medium"
+          >
+            Search
+          </button>
+        </div>
+      </div>
+    </form>
+  );
+}
