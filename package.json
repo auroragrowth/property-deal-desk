@@ -11,8 +11,10 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "stripe:setup": "node scripts/setup-stripe-products.mjs"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.13.0",
@@ -21,6 +23,7 @@
     "postgres": "^3.4.5",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "stripe": "^17.5.0",
     "svix": "^1.45.1",
     "zod": "^3.24.1"
   },

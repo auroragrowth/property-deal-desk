@@ -1,26 +1,172 @@
 @import "tailwindcss";
 
+/* ───────── Light mode (default) ───────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Page surfaces */
+  --bg-page: #fbf9f3;
+  --bg-surface: #ffffff;
+  --bg-surface-2: #fffdf8;
+  --bg-strong: #1c3020;
+
+  /* Text */
+  --text-primary: #0e1b14;
+  --text-secondary: #5a6259;
+  --text-tertiary: #7a7061;
+  --text-on-strong: #f6f2ea;
+  --text-accent: #2d4a36;
+
+  /* Borders */
+  --border-default: #ebe3d1;
+  --border-strong: #d9d1c1;
+  --border-focus: #d9a23c;
+
+  /* Brand accent (ochre) */
+  --accent: #d9a23c;
+  --accent-hover: #c08e2c;
+  --accent-pressed: #a87a23;
+  --accent-soft: #f6e6c1;
+  --accent-on: #1c3020;
+
+  /* Verdict states (brief §09) */
+  --pass-bg: #e0ecdf;
+  --pass-fg: #1c3020;
+  --pass-border: #6a8a6c;
+
+  --marginal-bg: #f9ebd0;
+  --marginal-fg: #6e4914;
+  --marginal-border: #c49a3a;
+
+  --fail-bg: #f5dad0;
+  --fail-fg: #6e2e1a;
+  --fail-border: #a6432a;
+
+  /* Info / system */
+  --info-bg: #e3ecf1;
+  --info-fg: #234555;
+  --info-border: #3e5c6e;
 }
 
+/* ───────── Dark mode (class="dark" on <html>) ───────── */
+.dark {
+  --bg-page: #0f1714;
+  --bg-surface: #1c2620;
+  --bg-surface-2: #243029;
+  --bg-strong: #0a1310;
+
+  --text-primary: #f6f2ea;
+  --text-secondary: rgba(246, 242, 234, 0.72);
+  --text-tertiary: rgba(246, 242, 234, 0.45);
+  --text-on-strong: #f6f2ea;
+  --text-accent: #b8d4bc;
+
+  --border-default: rgba(246, 242, 234, 0.10);
+  --border-strong: rgba(246, 242, 234, 0.18);
+  --border-focus: #e8b554;
+
+  --accent: #e8b554;
+  --accent-hover: #f0c46d;
+  --accent-pressed: #d9a23c;
+  --accent-soft: rgba(232, 181, 84, 0.15);
+  --accent-on: #0e1b14;
+
+  --pass-bg: rgba(106, 138, 108, 0.20);
+  --pass-fg: #b8d4bc;
+  --pass-border: #6a8a6c;
+
+  --marginal-bg: rgba(196, 154, 58, 0.20);
+  --marginal-fg: #f0d8a6;
+  --marginal-border: #c49a3a;
+
+  --fail-bg: rgba(166, 67, 42, 0.20);
+  --fail-fg: #f0c7ba;
+  --fail-border: #a6432a;
+
+  --info-bg: rgba(62, 92, 110, 0.25);
+  --info-fg: #b3c5d0;
+  --info-border: #3e5c6e;
+}
+
+/* ───────── Tailwind v4 theme — bridge tokens to utilities ───────── */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Backgrounds */
+  --color-bg-page: var(--bg-page);
+  --color-bg-surface: var(--bg-surface);
+  --color-bg-surface-2: var(--bg-surface-2);
+  --color-bg-strong: var(--bg-strong);
+
+  /* Text */
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-text-on-strong: var(--text-on-strong);
+  --color-text-accent: var(--text-accent);
+
+  /* Borders — `border-border` is the default rule, `border-border-strong`
+     and `border-border-focus` for emphasis variants */
+  --color-border: var(--border-default);
+  --color-border-strong: var(--border-strong);
+  --color-border-focus: var(--border-focus);
+
+  /* Brand accent */
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-pressed: var(--accent-pressed);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-on: var(--accent-on);
+
+  /* Verdict states */
+  --color-pass-bg: var(--pass-bg);
+  --color-pass-fg: var(--pass-fg);
+  --color-pass-border: var(--pass-border);
+
+  --color-marginal-bg: var(--marginal-bg);
+  --color-marginal-fg: var(--marginal-fg);
+  --color-marginal-border: var(--marginal-border);
+
+  --color-fail-bg: var(--fail-bg);
+  --color-fail-fg: var(--fail-fg);
+  --color-fail-border: var(--fail-border);
+
+  --color-info-bg: var(--info-bg);
+  --color-info-fg: var(--info-fg);
+  --color-info-border: var(--info-border);
+
+  /* Fonts — assigned to next/font variables in app/layout.tsx */
+  --font-serif:
+    var(--font-instrument-serif), ui-serif, Georgia, serif;
+  --font-sans:
+    var(--font-geist), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+
+  /* Radii */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+
+  /* Containers (max-w-app, max-w-marketing, max-w-prose) */
+  --container-app: 1280px;
+  --container-marketing: 1100px;
+  --container-prose: 680px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* ───────── Base ───────── */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  font-family:
+    var(--font-geist), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Default border colour for `border` utility (Tailwind v4 currentColor default
+   would otherwise render borders in text colour). */
+*,
+::before,
+::after {
+  border-color: var(--border-default);
 }

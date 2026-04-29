@@ -49,6 +49,11 @@ const ELITE: Entitlements = {
   maxWatchlistItems: Number.POSITIVE_INFINITY,
 };
 
+// Stripe statuses where the subscription should still grant entitlements.
+// `past_due` keeps access while Stripe retries (3 attempts); `unpaid` /
+// `canceled` / `incomplete_expired` collapse to FREE per brief §05.
+const GRANTING_STATUSES = new Set(["trialing", "active", "past_due"]);
+
 function mapPlan(
   plan: string | null | undefined,
   trial: boolean,
@@ -69,6 +74,7 @@ export async function getEntitlements(userId: string): Promise<Entitlements> {
   const sub = await db.query.subscriptions.findFirst({
     where: eq(subscriptions.userId, userId),
   });
-  const trial = sub?.status === "trialing";
-  return mapPlan(sub?.plan, trial);
+  if (!sub || !GRANTING_STATUSES.has(sub.status)) return FREE;
+  const trial = sub.status === "trialing";
+  return mapPlan(sub.plan, trial);
 }

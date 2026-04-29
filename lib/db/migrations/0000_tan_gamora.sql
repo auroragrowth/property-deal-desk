@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS "properties" (
 	"county" text,
 	"latitude" double precision,
 	"longitude" double precision,
-	"geom" "geography(point)" GENERATED ALWAYS AS ((ST_MakePoint(longitude, latitude)::geography)) STORED,
+	"geom" geography(point) GENERATED ALWAYS AS ((ST_MakePoint(longitude, latitude)::geography)) STORED,
 	"property_type" text,
 	"bedrooms" integer,
 	"bathrooms" integer,
