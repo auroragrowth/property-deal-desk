@@ -69,6 +69,41 @@ export function DashboardFilters() {
     router.push("/dashboard");
   }
 
+  function currentFilter() {
+    return {
+      postcode: postcode.trim() || undefined,
+      priceMin: priceMin || undefined,
+      priceMax: priceMax || undefined,
+      bedsMin: bedsMin || undefined,
+      bedsMax: bedsMax || undefined,
+      type: types.length > 0 ? types : undefined,
+      status: includeOffer ? "all" : undefined,
+    };
+  }
+
+  const [saving, setSaving] = useState(false);
+
+  async function saveCurrent() {
+    const name = window.prompt("Name this saved search:");
+    if (!name?.trim()) return;
+    setSaving(true);
+    try {
+      const res = await fetch("/api/saved-filters", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ name: name.trim(), filter: currentFilter() }),
+      });
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        window.alert(text || "Could not save");
+        return;
+      }
+      router.refresh();
+    } finally {
+      setSaving(false);
+    }
+  }
+
   function toggleType(value: string) {
     setTypes((t) =>
       t.includes(value) ? t.filter((x) => x !== value) : [...t, value],
@@ -198,7 +233,7 @@ export function DashboardFilters() {
           />
           Include Under Offer / Sold STC
         </label>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {isFiltered && (
             <button
               type="button"
@@ -206,6 +241,16 @@ export function DashboardFilters() {
               className="text-text-secondary hover:text-text-primary h-10 text-sm font-medium underline-offset-2 hover:underline"
             >
               Reset
+            </button>
+          )}
+          {isFiltered && (
+            <button
+              type="button"
+              onClick={saveCurrent}
+              disabled={saving}
+              className="border-border-strong text-text-primary h-10 rounded-md border-[0.5px] bg-transparent px-4 text-sm font-medium disabled:opacity-50"
+            >
+              {saving ? "Saving…" : "Save search"}
             </button>
           )}
           <button

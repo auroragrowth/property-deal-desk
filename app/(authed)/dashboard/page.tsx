@@ -9,6 +9,8 @@ import {
 } from "@/features/properties/queries";
 import { watchlistMap } from "@/features/watchlist/queries";
 import { WatchlistButton } from "@/features/watchlist/watchlist-button";
+import { listSavedFilters } from "@/features/properties/saved-filters-server";
+import { SavedFilterChips } from "@/features/properties/saved-filter-chips";
 
 const formatPrice = (pence: number | null) =>
   pence === null ? "—" : `£${(pence / 100).toLocaleString("en-GB")}`;
@@ -61,9 +63,10 @@ export default async function DashboardPage({
     status: sp.status === "all" ? "all" : "active",
   };
 
-  const [recent, watched] = await Promise.all([
+  const [recent, watched, savedFilters] = await Promise.all([
     searchProperties(filter),
     watchlistMap(userId),
+    listSavedFilters(userId),
   ]);
 
   return (
@@ -89,6 +92,11 @@ export default async function DashboardPage({
         >
           <DashboardFilters />
         </Suspense>
+        {savedFilters.length > 0 && (
+          <Suspense fallback={null}>
+            <SavedFilterChips items={savedFilters} />
+          </Suspense>
+        )}
       </div>
 
       <section className="mt-10">
