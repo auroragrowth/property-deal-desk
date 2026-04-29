@@ -1,6 +1,6 @@
-import { desc } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { properties } from "@/lib/db/schema";
+import { properties, propertyListings } from "@/lib/db/schema";
 import { PasteForm } from "@/features/properties/paste-form";
 
 const formatPrice = (pence: number | null) =>
@@ -11,12 +11,39 @@ const formatPostcode = (pc: string) => {
   return `${pc.slice(0, pc.length - 3)} ${pc.slice(-3)}`;
 };
 
+const portalLabel = (host: string) => {
+  if (host.includes("rightmove")) return "Rightmove";
+  if (host.includes("zoopla")) return "Zoopla";
+  if (host.includes("purplebricks")) return "Purplebricks";
+  return "View listing";
+};
+
 export default async function DashboardPage() {
-  const recent = await db
-    .select()
+  const rows = await db
+    .select({
+      id: properties.id,
+      addressLine1: properties.addressLine1,
+      postcode: properties.postcode,
+      bedrooms: properties.bedrooms,
+      propertyType: properties.propertyType,
+      listingPrice: properties.listingPrice,
+      createdAt: properties.createdAt,
+      sourceUrl: propertyListings.sourceUrl,
+    })
     .from(properties)
+    .leftJoin(propertyListings, eq(propertyListings.propertyId, properties.id))
     .orderBy(desc(properties.createdAt))
-    .limit(20);
+    .limit(40);
+
+  // Collapse to one row per property (keep the first listing URL we see).
+  const seen = new Set<string>();
+  const recent = rows
+    .filter((r) => {
+      if (seen.has(r.id)) return false;
+      seen.add(r.id);
+      return true;
+    })
+    .slice(0, 20);
 
   return (
     <main className="bg-bg-page max-w-app mx-auto p-8">
@@ -48,27 +75,47 @@ export default async function DashboardPage() {
           </div>
         ) : (
           <ul className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {recent.map((p) => (
-              <li
-                key={p.id}
-                className="bg-bg-surface border-border flex flex-col rounded-lg border-[0.5px] p-5"
-              >
-                <div className="flex items-baseline justify-between gap-3">
-                  <h3 className="text-text-primary text-sm font-medium leading-snug">
-                    {p.addressLine1}
-                  </h3>
-                  <span className="text-text-tertiary font-mono text-[11px] tracking-wide whitespace-nowrap">
-                    {formatPostcode(p.postcode)}
-                  </span>
-                </div>
-                <p className="text-text-primary mt-3 font-serif text-2xl">
-                  {formatPrice(p.listingPrice)}
-                </p>
-                <p className="text-text-tertiary mt-1 text-xs">
-                  {p.bedrooms ?? "—"} bed · {p.propertyType ?? "—"}
-                </p>
-              </li>
-            ))}
+            {recent.map((p) => {
+              let portalHost = "";
+              try {
+                portalHost = p.sourceUrl
+                  ? new URL(p.sourceUrl).hostname.toLowerCase()
+                  : "";
+              } catch {
+                portalHost = "";
+              }
+              return (
+                <li
+                  key={p.id}
+                  className="bg-bg-surface border-border flex flex-col rounded-lg border-[0.5px] p-5"
+                >
+                  <div className="flex items-baseline justify-between gap-3">
+                    <h3 className="text-text-primary text-sm leading-snug font-medium">
+                      {p.addressLine1}
+                    </h3>
+                    <span className="text-text-tertiary font-mono text-[11px] tracking-wide whitespace-nowrap">
+                      {formatPostcode(p.postcode)}
+                    </span>
+                  </div>
+                  <p className="text-text-primary mt-3 font-serif text-2xl">
+                    {formatPrice(p.listingPrice)}
+                  </p>
+                  <p className="text-text-tertiary mt-1 text-xs capitalize">
+                    {p.bedrooms ?? "—"} bed · {p.propertyType ?? "—"}
+                  </p>
+                  {p.sourceUrl && (
+                    <a
+                      href={p.sourceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-accent mt-4 text-xs font-medium underline underline-offset-2"
+                    >
+                      View on {portalLabel(portalHost)} ↗
+                    </a>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>

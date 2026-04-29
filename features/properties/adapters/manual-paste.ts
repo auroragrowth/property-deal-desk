@@ -46,14 +46,16 @@ export const manualPasteAdapter: PropertyFeedAdapter = {
     const jsonLd = extractJsonLd(html);
     const og = extractOpenGraph(html);
 
-    const address =
-      pickAddress(jsonLd) ?? og["og:title"] ?? "Unknown address";
     const postcode = pickPostcode(jsonLd) ?? scanPostcode(html) ?? "";
+    const address =
+      pickAddress(jsonLd) ??
+      pickAddressFromText(html, og, postcode) ??
+      "Unknown address";
     const price = pickPricePence(jsonLd, og, html) ?? 0;
-    const bedrooms = pickBedrooms(jsonLd) ?? 0;
-    const propertyType = pickType(jsonLd);
+    const bedrooms =
+      pickBedrooms(jsonLd) ?? pickBedroomsFromText(html, og) ?? 0;
+    const propertyType = pickType(jsonLd) ?? pickTypeFromText(html, og);
     const sourceListingId = extractListingId(url) ?? url;
-    void html; // referenced via pickPricePence below
 
     return {
       source: "manual",
@@ -252,7 +254,7 @@ function pickBedrooms(jsonLd: unknown[]): number | null {
 
 function pickType(
   jsonLd: unknown[],
-): NormalisedProperty["property_type"] {
+): NormalisedProperty["property_type"] | null {
   for (const item of jsonLd) {
     const obj = getRecord(item);
     if (!obj) continue;
@@ -262,7 +264,80 @@ function pickType(
     if (type.includes("detached")) return "detached";
     if (type.includes("house") || type.includes("residence")) return "semi";
   }
+  return null;
+}
+
+function pickBedroomsFromText(
+  html: string,
+  og: Record<string, string>,
+): number | null {
+  const candidates = [og["og:title"], og["og:description"], extractTitle(html)];
+  for (const text of candidates) {
+    if (!text) continue;
+    const m = text.match(/(\d+)\s*(?:bed(?:room)?s?)\b/i);
+    if (m) {
+      const n = parseInt(m[1], 10);
+      if (!isNaN(n) && n > 0 && n < 20) return n;
+    }
+  }
+  return null;
+}
+
+function pickTypeFromText(
+  html: string,
+  og: Record<string, string>,
+): NormalisedProperty["property_type"] {
+  const candidates = [og["og:title"], og["og:description"], extractTitle(html)];
+  const text = candidates.filter(Boolean).join(" ").toLowerCase();
+  // Order matters — "semi-detached" must beat "detached"
+  if (/semi[\s-]?detached/.test(text)) return "semi";
+  if (/\bdetached\b/.test(text)) return "detached";
+  if (/\bterrac/.test(text)) return "terrace";
+  if (/\bflat\b|\bapartment\b|\bmaisonette\b/.test(text)) return "flat";
+  if (/\bbungalow\b/.test(text)) return "semi";
   return "other";
+}
+
+function pickAddressFromText(
+  html: string,
+  og: Record<string, string>,
+  postcode: string,
+): string | null {
+  // Rightmove's og:description sometimes contains the address before the
+  // postcode. Try to extract the chunk just before the postcode.
+  const desc = og["og:description"] ?? "";
+  if (postcode && desc) {
+    const i = desc.toUpperCase().indexOf(postcode.replace(/\s+/g, ""));
+    if (i > 10) {
+      const before = desc.slice(0, i).trim();
+      const cleaned = before.replace(/[,\s]+$/, "").trim();
+      if (cleaned.length >= 5 && cleaned.length <= 120) return cleaned;
+    }
+  }
+  // Fall back to <h1> if it doesn't look like the generic boilerplate.
+  const h1 = extractTag(html, "h1");
+  if (h1 && !/rightmove|zoopla|purplebricks/i.test(h1) && h1.length <= 200) {
+    return h1;
+  }
+  return null;
+}
+
+function extractTitle(html: string): string {
+  const m = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  return m ? stripTags(m[1]).trim() : "";
+}
+
+function extractTag(html: string, tag: string): string {
+  const re = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`, "i");
+  const m = html.match(re);
+  return m ? stripTags(m[1]).trim() : "";
+}
+
+function stripTags(s: string): string {
+  return s
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function normalise(pc: string): string {
