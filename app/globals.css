@@ -1,89 +1,89 @@
 @import "tailwindcss";
 
-/* ───────── Light mode (default) ───────── */
+/* ───────── Heritage estate · Light mode (default) ───────── */
 :root {
   /* Page surfaces */
-  --bg-page: #fbf9f3;
-  --bg-surface: #ffffff;
-  --bg-surface-2: #fffdf8;
-  --bg-strong: #1c3020;
+  --bg-page: #f4ecd8;        /* parchment */
+  --bg-surface: #fdfaf3;     /* warm white — cards, inputs, panels */
+  --bg-surface-2: #f8f0db;   /* nested surfaces */
+  --bg-strong: #5b2330;      /* claret — top bar, primary buttons */
 
   /* Text */
-  --text-primary: #0e1b14;
-  --text-secondary: #5a6259;
-  --text-tertiary: #7a7061;
-  --text-on-strong: #f6f2ea;
-  --text-accent: #2d4a36;
+  --text-primary: #1a1410;   /* deep brown-black */
+  --text-secondary: #6b5e4d;
+  --text-tertiary: #8a7d6b;
+  --text-on-strong: #f4ecd8; /* parchment on claret */
+  --text-accent: #5b2330;    /* claret — italic emphasis in headlines */
 
-  /* Borders */
-  --border-default: #ebe3d1;
-  --border-strong: #d9d1c1;
-  --border-focus: #d9a23c;
+  /* Borders & rules */
+  --border-default: #d9c8a3;
+  --border-strong: #c4af7d;
+  --border-focus: #b8901f;   /* brass focus ring */
 
-  /* Brand accent (ochre) */
-  --accent: #d9a23c;
-  --accent-hover: #c08e2c;
-  --accent-pressed: #a87a23;
-  --accent-soft: #f6e6c1;
-  --accent-on: #1c3020;
+  /* Brand accent — antique brass */
+  --accent: #b8901f;
+  --accent-hover: #9c7818;
+  --accent-pressed: #856518;
+  --accent-soft: #f0e0a8;
+  --accent-on: #1a1410;
 
   /* Verdict states (brief §09) */
-  --pass-bg: #e0ecdf;
-  --pass-fg: #1c3020;
-  --pass-border: #6a8a6c;
+  --pass-bg: #d6e3cf;
+  --pass-fg: #2d4a36;
+  --pass-border: #5b7553;
 
-  --marginal-bg: #f9ebd0;
+  --marginal-bg: #f0d99e;
   --marginal-fg: #6e4914;
-  --marginal-border: #c49a3a;
+  --marginal-border: #b8901f;
 
-  --fail-bg: #f5dad0;
-  --fail-fg: #6e2e1a;
-  --fail-border: #a6432a;
+  --fail-bg: #efd2cb;
+  --fail-fg: #5b2330;
+  --fail-border: #8a3441;
 
   /* Info / system */
-  --info-bg: #e3ecf1;
-  --info-fg: #234555;
-  --info-border: #3e5c6e;
+  --info-bg: #d8dee8;
+  --info-fg: #2c4055;
+  --info-border: #4a6580;
 }
 
-/* ───────── Dark mode (class="dark" on <html>) ───────── */
+/* ───────── Heritage estate · Dark mode ───────── */
 .dark {
-  --bg-page: #0f1714;
-  --bg-surface: #1c2620;
-  --bg-surface-2: #243029;
-  --bg-strong: #0a1310;
+  --bg-page: #1f0e13;
+  --bg-surface: #2a131a;
+  --bg-surface-2: #341822;
+  --bg-strong: #f4ecd8;       /* parchment becomes the strong surface in dark */
 
-  --text-primary: #f6f2ea;
-  --text-secondary: rgba(246, 242, 234, 0.72);
-  --text-tertiary: rgba(246, 242, 234, 0.45);
-  --text-on-strong: #f6f2ea;
-  --text-accent: #b8d4bc;
+  --text-primary: #f4ecd8;
+  --text-secondary: rgba(244, 236, 216, 0.72);
+  --text-tertiary: rgba(244, 236, 216, 0.48);
+  --text-on-strong: #1a1410;  /* dark text on parchment */
+  --text-accent: #efc77a;
 
-  --border-default: rgba(246, 242, 234, 0.10);
-  --border-strong: rgba(246, 242, 234, 0.18);
-  --border-focus: #e8b554;
+  --border-default: rgba(244, 236, 216, 0.10);
+  --border-strong: rgba(244, 236, 216, 0.18);
+  --border-focus: #d4a942;
 
-  --accent: #e8b554;
-  --accent-hover: #f0c46d;
-  --accent-pressed: #d9a23c;
-  --accent-soft: rgba(232, 181, 84, 0.15);
-  --accent-on: #0e1b14;
+  --accent: #d4a942;
+  --accent-hover: #e3bb5a;
+  --accent-pressed: #b8901f;
+  --accent-soft: rgba(212, 169, 66, 0.18);
+  --accent-on: #1a1410;
 
-  --pass-bg: rgba(106, 138, 108, 0.20);
-  --pass-fg: #b8d4bc;
-  --pass-border: #6a8a6c;
+  --pass-bg: rgba(91, 117, 83, 0.22);
+  --pass-fg: #c5d4bc;
+  --pass-border: #5b7553;
 
-  --marginal-bg: rgba(196, 154, 58, 0.20);
-  --marginal-fg: #f0d8a6;
-  --marginal-border: #c49a3a;
+  --marginal-bg: rgba(184, 144, 31, 0.20);
+  --marginal-fg: #f0d99e;
+  --marginal-border: #b8901f;
 
-  --fail-bg: rgba(166, 67, 42, 0.20);
-  --fail-fg: #f0c7ba;
-  --fail-border: #a6432a;
+  --fail-bg: rgba(138, 52, 65, 0.22);
+  --fail-fg: #efd2cb;
+  --fail-border: #8a3441;
 
-  --info-bg: rgba(62, 92, 110, 0.25);
+  --info-bg: rgba(74, 101, 128, 0.22);
   --info-fg: #b3c5d0;
-  --info-border: #3e5c6e;
+  --info-border: #4a6580;
 }
 
 /* ───────── Tailwind v4 theme — bridge tokens to utilities ───────── */
@@ -101,20 +101,19 @@
   --color-text-on-strong: var(--text-on-strong);
   --color-text-accent: var(--text-accent);
 
-  /* Borders — `border-border` is the default rule, `border-border-strong`
-     and `border-border-focus` for emphasis variants */
+  /* Borders */
   --color-border: var(--border-default);
   --color-border-strong: var(--border-strong);
   --color-border-focus: var(--border-focus);
 
-  /* Brand accent */
+  /* Accent (brass) */
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-accent-pressed: var(--accent-pressed);
   --color-accent-soft: var(--accent-soft);
   --color-accent-on: var(--accent-on);
 
-  /* Verdict states */
+  /* Verdict */
   --color-pass-bg: var(--pass-bg);
   --color-pass-fg: var(--pass-fg);
   --color-pass-border: var(--pass-border);
@@ -131,20 +130,20 @@
   --color-info-fg: var(--info-fg);
   --color-info-border: var(--info-border);
 
-  /* Fonts — assigned to next/font variables in app/layout.tsx */
+  /* Fonts */
   --font-serif:
     var(--font-instrument-serif), ui-serif, Georgia, serif;
   --font-sans:
     var(--font-geist), -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
 
-  /* Radii */
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 12px;
+  /* Radii — heritage uses tighter corners (3–8px) */
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 8px;
 
-  /* Containers (max-w-app, max-w-marketing, max-w-prose) */
+  /* Containers */
   --container-app: 1280px;
   --container-marketing: 1100px;
   --container-prose: 680px;
@@ -163,8 +162,6 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* Default border colour for `border` utility (Tailwind v4 currentColor default
-   would otherwise render borders in text colour). */
 *,
 ::before,
 ::after {

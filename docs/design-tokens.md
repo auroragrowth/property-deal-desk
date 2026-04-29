@@ -1,17 +1,23 @@
 # DealDesk — Design Tokens
 
-Direction: Option B — Editorial brand evolved for app context.
-Status: Canonical. All UI must reference these tokens. No hex codes, no font names anywhere else in the codebase.
+**Direction:** Heritage estate. Burgundy, brass, parchment.
+**Status:** Canonical. All UI must reference these tokens. No hex codes, no font names anywhere else in the codebase.
+
+---
 
 ## 1. Philosophy
 
-DealDesk's brand evolves the editorial design system from the planning docs into something app-native. Cream backgrounds remain — they signal calm, considered, premium — but lighten so cards and inputs pop. Instrument Serif anchors hero moments (page titles, verdict headlines, marketing pages) but everything functional uses Geist sans for legibility. Ochre brightens into proper button territory. Moss-deep stays as the strong-contrast brand colour.
+DealDesk's brand evokes the visual language of traditional UK property — Savills, Knight Frank, Strutt & Parker. Parchment cream backgrounds, deep claret as the strong-contrast colour, antique brass as the primary accent, Instrument Serif for headlines with italic claret emphasis. Mono kicker labels above sections (the editorial pattern from the planning docs). Sage green and honey amber for verdict states, with claret-tinted backgrounds for failures.
 
 Three editorial moves protect the brand identity from being sanded off into generic SaaS:
 
-- Italic ochre accents in serif headlines (`...worth a *second look*`)
-- Mono kicker labels above section headings (`04 / dashboard`)
-- Sage/rust verdict tints instead of stock fintech green/red
+1. **Italic claret accents** in serif headlines (`...worth a *second look*`)
+2. **Mono kicker labels** above section headings (`04 / DASHBOARD`)
+3. **Parchment-on-claret** top bar — the heritage masthead
+
+Heritage is **light-mode-first**. The primary expression of the brand is on parchment. A dark mode is provided for user preference and accessibility, but marketing screenshots and the default experience are light.
+
+---
 
 ## 2. Colour palette
 
@@ -20,47 +26,46 @@ Three editorial moves protect the brand identity from being sanded off into gene
 ```css
 :root {
   /* Page surfaces */
-  --bg-page: #fbf9f3;        /* lifted cream — the page background */
-  --bg-surface: #ffffff;     /* cards, inputs, panels */
-  --bg-surface-2: #fffdf8;   /* nested surfaces (callouts, code blocks) */
-  --bg-strong: #1c3020;      /* moss-deep — top bar, primary buttons, dark accents */
+  --bg-page: #f4ecd8;        /* parchment — the page background */
+  --bg-surface: #fdfaf3;     /* warm white — cards, inputs, panels */
+  --bg-surface-2: #f8f0db;   /* nested surfaces (callouts, code blocks) */
+  --bg-strong: #5b2330;      /* claret — top bar, primary buttons, dark accents */
 
   /* Text */
-  --text-primary: #0e1b14;   /* headlines, body */
-  --text-secondary: #5a6259; /* labels, metadata */
-  --text-tertiary: #7a7061;  /* hints, disabled, muted timestamps */
-  --text-on-strong: #f6f2ea; /* text on moss-deep surfaces */
-  --text-accent: #2d4a36;    /* moss — italic emphasis in headlines */
+  --text-primary: #1a1410;   /* deep brown-black — headlines, body */
+  --text-secondary: #6b5e4d; /* warm brown — labels, metadata */
+  --text-tertiary: #8a7d6b;  /* faded brown — hints, disabled, timestamps */
+  --text-on-strong: #f4ecd8; /* parchment — text on claret surfaces */
+  --text-accent: #5b2330;    /* claret — italic emphasis in headlines */
 
   /* Borders & rules */
-  --border-default: #ebe3d1; /* warm rule — most borders */
-  --border-strong: #d9d1c1;  /* emphasised borders, dividers */
-  --border-focus: #d9a23c;   /* focus rings on inputs */
+  --border-default: #d9c8a3; /* parchment edge — most borders */
+  --border-strong: #c4af7d;  /* darker parchment — emphasised borders, dividers */
+  --border-focus: #b8901f;   /* brass — focus rings on inputs */
 
-  /* Brand accent */
-  --accent: #d9a23c;         /* primary ochre — buttons, links, focus */
-  --accent-hover: #c08e2c;
-  --accent-pressed: #a87a23;
-  --accent-soft: #f6e6c1;    /* tinted backgrounds (notification dots, soft chips) */
-  --accent-on: #1c3020;      /* text on accent buttons (moss on ochre — high contrast) */
+  /* Brand accent — antique brass */
+  --accent: #b8901f;
+  --accent-hover: #9c7818;
+  --accent-pressed: #856518;
+  --accent-soft: #f0e0a8;
+  --accent-on: #1a1410;
 
-  /* Semantic — verdict states from brief §09 */
-  --pass-bg: #e0ecdf;
-  --pass-fg: #1c3020;
-  --pass-border: #6a8a6c;
+  /* Semantic — verdict states (brief §09) */
+  --pass-bg: #d6e3cf;
+  --pass-fg: #2d4a36;
+  --pass-border: #5b7553;
 
-  --marginal-bg: #f9ebd0;
+  --marginal-bg: #f0d99e;
   --marginal-fg: #6e4914;
-  --marginal-border: #c49a3a;
+  --marginal-border: #b8901f;
 
-  --fail-bg: #f5dad0;
-  --fail-fg: #6e2e1a;
-  --fail-border: #a6432a;
+  --fail-bg: #efd2cb;
+  --fail-fg: #5b2330;
+  --fail-border: #8a3441;
 
-  /* Info / system */
-  --info-bg: #e3ecf1;
-  --info-fg: #234555;
-  --info-border: #3e5c6e;
+  --info-bg: #d8dee8;
+  --info-fg: #2c4055;
+  --info-border: #4a6580;
 }
 ```
 
@@ -68,50 +73,50 @@ Three editorial moves protect the brand identity from being sanded off into gene
 
 ```css
 .dark {
-  --bg-page: #0f1714;
-  --bg-surface: #1c2620;
-  --bg-surface-2: #243029;
-  --bg-strong: #0a1310;
+  --bg-page: #1f0e13;
+  --bg-surface: #2a131a;
+  --bg-surface-2: #341822;
+  --bg-strong: #f4ecd8;
 
-  --text-primary: #f6f2ea;
-  --text-secondary: rgba(246, 242, 234, 0.72);
-  --text-tertiary: rgba(246, 242, 234, 0.45);
-  --text-on-strong: #f6f2ea;
-  --text-accent: #b8d4bc;
+  --text-primary: #f4ecd8;
+  --text-secondary: rgba(244, 236, 216, 0.72);
+  --text-tertiary: rgba(244, 236, 216, 0.48);
+  --text-on-strong: #1a1410;
+  --text-accent: #efc77a;
 
-  --border-default: rgba(246, 242, 234, 0.10);
-  --border-strong: rgba(246, 242, 234, 0.18);
-  --border-focus: #e8b554;
+  --border-default: rgba(244, 236, 216, 0.10);
+  --border-strong: rgba(244, 236, 216, 0.18);
+  --border-focus: #d4a942;
 
-  --accent: #e8b554;
-  --accent-hover: #f0c46d;
-  --accent-pressed: #d9a23c;
-  --accent-soft: rgba(232, 181, 84, 0.15);
-  --accent-on: #0e1b14;
+  --accent: #d4a942;
+  --accent-hover: #e3bb5a;
+  --accent-pressed: #b8901f;
+  --accent-soft: rgba(212, 169, 66, 0.18);
+  --accent-on: #1a1410;
 
-  --pass-bg: rgba(106, 138, 108, 0.20);
-  --pass-fg: #b8d4bc;
-  --pass-border: #6a8a6c;
+  --pass-bg: rgba(91, 117, 83, 0.22);
+  --pass-fg: #c5d4bc;
+  --pass-border: #5b7553;
 
-  --marginal-bg: rgba(196, 154, 58, 0.20);
-  --marginal-fg: #f0d8a6;
-  --marginal-border: #c49a3a;
+  --marginal-bg: rgba(184, 144, 31, 0.20);
+  --marginal-fg: #f0d99e;
+  --marginal-border: #b8901f;
 
-  --fail-bg: rgba(166, 67, 42, 0.20);
-  --fail-fg: #f0c7ba;
-  --fail-border: #a6432a;
+  --fail-bg: rgba(138, 52, 65, 0.22);
+  --fail-fg: #efd2cb;
+  --fail-border: #8a3441;
 
-  --info-bg: rgba(62, 92, 110, 0.25);
+  --info-bg: rgba(74, 101, 128, 0.22);
   --info-fg: #b3c5d0;
-  --info-border: #3e5c6e;
+  --info-border: #4a6580;
 }
 ```
 
-Implementation: put the `:root` and `.dark` blocks in `app/globals.css`. Toggle dark mode by adding `class="dark"` to `<html>` (use `next-themes` library).
+Implementation: put both blocks in `app/globals.css`. Toggle dark mode by adding `class="dark"` to `<html>` (use `next-themes`).
+
+---
 
 ## 3. Typography
-
-### Font families
 
 ```css
 --font-serif: 'Instrument Serif', ui-serif, Georgia, serif;
@@ -119,64 +124,57 @@ Implementation: put the `:root` and `.dark` blocks in `app/globals.css`. Toggle 
 --font-mono: 'JetBrains Mono', 'Geist Mono', ui-monospace, monospace;
 ```
 
-Load via `next/font` in `app/layout.tsx` using Google Fonts adapter for Instrument Serif, Geist, and JetBrains Mono. Assign each to a CSS variable per Next.js 15 conventions.
+Load via `next/font` in `app/layout.tsx`.
 
-### Scale
+| Token         | Size              | Weight | Family | Use                                                                      |
+| ------------- | ----------------- | ------ | ------ | ------------------------------------------------------------------------ |
+| `text-display` | 48px / line 1.05  | 400    | serif  | Marketing hero only                                                      |
+| `text-h1`      | 32px / line 1.05  | 400    | serif  | Page titles                                                              |
+| `text-h2`      | 24px / line 1.15  | 400    | serif  | Section headings                                                         |
+| `text-h3`      | 18px / line 1.3   | 500    | sans   | Card titles                                                              |
+| `text-body`    | 15px / line 1.55  | 400    | sans   | Default body                                                             |
+| `text-body-sm` | 13px / line 1.5   | 400    | sans   | Compact UI, tables                                                       |
+| `text-label`   | 12px / line 1.4   | 500    | sans   | Form labels                                                              |
+| `text-kicker`  | 11px / line 1.4   | 500    | mono   | Kicker labels — uppercase, letter-spacing 0.18em, brass colour           |
+| `text-stat`    | 28px / line 1     | 400    | serif  | KPI numbers — heritage signature                                         |
+| `text-mono-sm` | 11px / line 1.4   | 400    | mono   | IDs, technical metadata                                                  |
 
-| Token         | Size                   | Weight | Family | Use                                                                          |
-| ------------- | ---------------------- | ------ | ------ | ---------------------------------------------------------------------------- |
-| `text-display` | 48px / line 1.05      | 400    | serif  | Marketing hero only                                                          |
-| `text-h1`      | 32px / line 1.08      | 400    | serif  | Page titles (dashboard, deal verdict)                                        |
-| `text-h2`      | 24px / line 1.15      | 400    | serif  | Section headings                                                             |
-| `text-h3`      | 18px / line 1.3       | 500    | sans   | Card titles, subsection headings                                             |
-| `text-body`    | 15px / line 1.55      | 400    | sans   | Default body                                                                 |
-| `text-body-sm` | 13px / line 1.5       | 400    | sans   | Compact UI, table cells                                                      |
-| `text-label`   | 12px / line 1.4       | 500    | sans   | Form labels, metadata                                                        |
-| `text-kicker`  | 11px / line 1.4       | 500    | mono   | Above-headline labels (`04 / DASHBOARD`) — uppercase, letter-spacing 0.18em  |
-| `text-stat`    | 28px / line 1         | 400    | serif  | KPI numbers on cards                                                         |
-| `text-mono-sm` | 11px / line 1.4       | 400    | mono   | Code, IDs, technical metadata                                                |
+**Italic claret emphasis:** in serif headlines, parts that say "_…worth a second look_" use `font-style: italic; color: var(--text-accent);`. Once per headline maximum.
 
-**Editorial italic emphasis:** in any serif headline, parts that say "…worth a _second look_" or "…what we're _building_" use `font-style: italic; color: var(--text-accent);`. Do this sparingly — once per headline maximum.
+---
 
 ## 4. Spacing & layout
 
 ```css
-/* Spacing scale (rem) */
---space-1: 0.25rem;   /* 4px */
---space-2: 0.5rem;    /* 8px */
---space-3: 0.75rem;   /* 12px */
---space-4: 1rem;      /* 16px */
---space-5: 1.25rem;   /* 20px */
---space-6: 1.5rem;    /* 24px */
---space-8: 2rem;      /* 32px */
---space-12: 3rem;     /* 48px */
---space-16: 4rem;     /* 64px */
+--space-1: 0.25rem;  --space-2: 0.5rem;   --space-3: 0.75rem;
+--space-4: 1rem;     --space-5: 1.25rem;  --space-6: 1.5rem;
+--space-8: 2rem;     --space-12: 3rem;    --space-16: 4rem;
 
-/* Border radius */
---radius-sm: 4px;     /* badges, chips, small pills */
---radius-md: 6px;     /* inputs, buttons */
---radius-lg: 8px;     /* cards, panels */
---radius-xl: 12px;    /* hero/marketing surfaces */
+--radius-sm: 3px;
+--radius-md: 4px;
+--radius-lg: 6px;
+--radius-xl: 8px;
 --radius-full: 9999px;
 
-/* Containers */
---container-app: 1280px;       /* dashboard max width */
---container-marketing: 1100px; /* marketing pages */
---container-prose: 680px;      /* docs, settings, narrow forms */
+--container-app: 1280px;
+--container-marketing: 1100px;
+--container-prose: 680px;
 ```
 
-Mobile-first. Brief §13 acceptance criteria: all core pages work cleanly at 360px width, no horizontal scroll, all tap targets ≥ 44px.
+Heritage uses **tighter corner radii than typical SaaS** (3–8px). Sharper corners read as architectural and traditional. Avoid pill shapes except for status dots.
+
+Mobile-first per brief §13: 360px width, no horizontal scroll, tap targets ≥ 44px.
+
+---
 
 ## 5. Component primitives
-
-These are the canonical specs. shadcn/ui components must be customised to match.
 
 ### Button
 
 ```css
 .btn-primary {
-  background: var(--accent);
-  color: var(--accent-on);
+  background: var(--bg-strong);
+  color: var(--text-on-strong);
   font-family: var(--font-sans);
   font-size: 14px;
   font-weight: 500;
@@ -184,22 +182,23 @@ These are the canonical specs. shadcn/ui components must be customised to match.
   border-radius: var(--radius-md);
   min-height: 40px;
 }
-.btn-primary:hover { background: var(--accent-hover); }
-.btn-primary:active { background: var(--accent-pressed); }
+.btn-primary:hover { background: #6b2a3a; }
 
-.btn-secondary {
-  background: var(--bg-strong);
-  color: var(--text-on-strong);
-  /* same sizing as primary */
+.btn-accent {
+  background: var(--accent);
+  color: var(--accent-on);
+  /* same sizing */
 }
+.btn-accent:hover { background: var(--accent-hover); }
 
 .btn-ghost {
   background: transparent;
   color: var(--text-primary);
   border: 0.5px solid var(--border-strong);
-  /* same sizing */
 }
 ```
+
+**Use `btn-primary` (claret) as the default.** Use `btn-accent` (brass) only for the *one* most important call-to-action on a page. Never two brass buttons on the same screen.
 
 ### Card
 
@@ -233,106 +232,136 @@ These are the canonical specs. shadcn/ui components must be customised to match.
 
 ### KPI card
 
+KPI numerals use **serif** — heritage signature. Sets DealDesk apart from generic dashboards.
+
 ```css
-.kpi {
-  background: var(--bg-surface);
-  border: 0.5px solid var(--border-default);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4) var(--space-5);
+.kpi { /* uses .card */ }
+.kpi-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-bottom: 4px;
 }
-.kpi-label { /* text-label tokens, color: var(--text-tertiary) */ }
-.kpi-value { /* text-stat tokens, color: var(--text-primary) */ }
+.kpi-value {
+  font-family: var(--font-serif);
+  font-size: 28px;
+  color: var(--text-primary);
+}
+.kpi-value.is-accent {
+  color: var(--text-accent);
+  font-style: italic;
+}
 ```
 
 ### Verdict banner (deal analyzer — brief §09)
 
-Three states. Same shape, different palette.
-
 ```css
-.verdict-pass {
-  background: var(--pass-bg);
-  color: var(--pass-fg);
-  border-left: 3px solid var(--pass-border);
+.verdict {
   border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  border-left: 3px solid;
   padding: var(--space-4) var(--space-5);
 }
-.verdict-marginal { /* same shape with --marginal-* */ }
-.verdict-fail { /* same shape with --fail-* */ }
+.verdict-pass     { background: var(--pass-bg); color: var(--pass-fg); border-left-color: var(--pass-border); }
+.verdict-marginal { background: var(--marginal-bg); color: var(--marginal-fg); border-left-color: var(--marginal-border); }
+.verdict-fail     { background: var(--fail-bg); color: var(--fail-fg); border-left-color: var(--fail-border); }
 ```
 
-**Important:** verdict banners use a left border accent only — the brief says no rounded corner on the left. The CSS variable `border-radius: 0 ... ... 0` handles this.
+Left-border accent only — no rounded corner on the left.
 
 ### Pill / badge
 
 ```css
 .pill {
-  font-family: var(--font-sans);
-  font-size: 11px;
+  font-family: var(--font-mono);
+  font-size: 10px;
   font-weight: 500;
   padding: 4px 10px;
   border-radius: var(--radius-sm);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
-.pill-pass { background: var(--pass-bg); color: var(--pass-fg); }
+.pill-pass     { background: var(--bg-strong); color: var(--text-on-strong); }
 .pill-marginal { background: var(--marginal-bg); color: var(--marginal-fg); }
-.pill-fail { background: var(--fail-bg); color: var(--fail-fg); }
+.pill-fail     { background: var(--fail-bg); color: var(--fail-fg); border: 0.5px solid var(--fail-border); }
 .pill-source-rightmove { background: var(--info-bg); color: var(--info-fg); }
 ```
 
-### Top bar (app chrome)
+**Heritage signature: the pass pill uses claret + parchment**, not green — like a stamp on a Victorian property document.
 
-White background, 0.5px bottom border, 56px tall, 22px horizontal padding. Logo wordmark on the left (`DealDesk` in sans 500, with a 24px moss-deep square containing italic serif `D` in ochre to its left). Nav links on the right at 13px sans, secondary colour, with the active route in primary at weight 500.
+### Top bar
+
+```css
+.topbar {
+  background: var(--bg-strong);
+  color: var(--text-on-strong);
+  padding: 14px 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.brand-deal { font-family: var(--font-serif); font-size: 22px; color: var(--text-on-strong); }
+.brand-desk { font-family: var(--font-serif); font-size: 22px; color: var(--accent); font-style: italic; }
+.topbar nav a {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(244, 236, 216, 0.7);
+}
+.topbar nav a.active { color: var(--accent); }
+```
+
+---
 
 ## 6. Tailwind setup (v4)
 
-This project uses Tailwind CSS v4. Rather than `tailwind.config.ts`, configuration goes in `app/globals.css` via the `@theme` directive. The CSS variables in section 2 are wrapped in a matching `@theme inline` block so they generate Tailwind utility classes (`bg-bg-page`, `text-text-primary`, `border-border`, `bg-accent`, `text-pass-fg`, etc.).
+This project uses Tailwind CSS v4. Rather than `tailwind.config.ts`, configuration lives in `app/globals.css` via `@theme inline`. The CSS variables in section 2 are bridged so they generate Tailwind utility classes (`bg-bg-page`, `text-text-primary`, `border-border`, `bg-accent`, `text-pass-fg`, etc.).
+
+---
 
 ## 7. shadcn/ui customisation
 
-Update `components/ui/*.tsx` to use the tokens above. Specifically:
+- `Button` — primary uses `bg-bg-strong text-text-on-strong`. Accent uses `bg-accent text-accent-on`.
+- `Card` — `bg-bg-surface border-border rounded-lg`
+- `Input` — `bg-bg-surface border-border focus:border-border-focus`
+- `Badge` — custom variants: `pass`, `marginal`, `fail`, `source` per pill spec
+- `Alert` — custom variants matching verdict banner spec
 
-- **Button** → primary variant uses `bg-accent text-accent-on hover:bg-accent-hover`
-- **Card** → `bg-bg-surface border-border` with `rounded-lg`
-- **Input** → `bg-bg-surface border-border focus:border-border-focus`
-- **Badge** → custom variants: `pass`, `marginal`, `fail`, `source`
-- **Alert** → custom variants matching the verdict banner spec
+When adding new shadcn components, immediately swap `bg-background`/`text-foreground` to DealDesk tokens.
 
-When adding new shadcn components, immediately swap `bg-background`/`text-foreground` etc. to the DealDesk tokens before merging.
+---
 
 ## 8. Marketing vs app
 
-The same tokens cover both contexts; only emphasis changes.
+Same tokens, different volume.
 
-**Marketing pages** (`/`, `/pricing`, `/about`):
+**Marketing pages:** `--container-marketing` (1100px). Heavier serif. More italic claret accents. Mono kicker labels above each section. Long claret-on-parchment hero blocks. Like a Knight Frank property report.
 
-- Use `--container-marketing` (1100px)
-- Heavier serif: `text-display` for heroes, `text-h1` and `text-h2` for sections
-- More italic ochre accents in headlines
-- Mono kicker labels above each section (the editorial pattern from the planning docs)
+**App pages:** `--container-app` (1280px). Serif for h1, KPI numerals, verdict banner headline only. Sans for everything else. Mono for postcodes, IDs, kicker labels, pill badges. Claret reserved for top bar, primary buttons, the pass pill — don't sprinkle elsewhere.
 
-**App pages** (`/dashboard`, `/watchlist`, `/deal/[id]`, `/settings`):
-
-- Use `--container-app` (1280px) but pages can be narrower
-- Serif only for page-level `h1` and the verdict banner headline
-- Sans for everything else (cards, tables, forms, KPI labels)
-- Mono only for technical metadata (postcodes, IDs, percentages where compactness matters)
-
-The result: marketing feels like a Financial Times property column. The app feels like considered software. Same brand, different volume.
+---
 
 ## 9. Accessibility — non-negotiable
 
-- All text on background combinations must clear **WCAG AA** (4.5:1 body, 3:1 large text). The palette above is designed to pass — don't introduce off-token colours that don't.
-- Tap targets ≥ 44px (brief §13).
-- Focus rings always visible — never `outline: none` without an alternative.
-- Verdict states never communicated by colour alone — always include a text label (Pass, Marginal, Fail).
+- All text/background combos must clear WCAG AA (4.5:1 body, 3:1 large text).
+- **Brass accent (`#b8901f`) on parchment (`#f4ecd8`) passes only for large text (≥18px), not 14px body.** Brass is for buttons (deep brown text on brass — high contrast), kicker labels, and heading accents — never body copy.
+- Tap targets ≥ 44px.
+- Focus rings always visible.
+- Verdict states never colour-only — always include text label (`Pass`, `Marginal`, `Fail`).
+
+---
 
 ## 10. What NOT to do
 
-- ❌ No gradients (the brand is flat by design).
-- ❌ No shadows on cards. Borders only.
-- ❌ No drop shadows behind type, no glow, no neon.
-- ❌ No emoji in UI chrome. Use Lucide icons (already in shadcn/ui).
-- ❌ No hardcoded hex codes outside this file. Always reference tokens.
-- ❌ No serif fonts for body or interactive elements (clickable text). Serif is for headlines and the verdict banner only.
-- ❌ No font weight above 500. Stick to 400 and 500.
-- ❌ No "stock fintech" colours (electric green, indigo, etc.) — this brand is sage-and-ochre, not Robinhood.
+- ✗ No gradients
+- ✗ No shadows on cards. Borders only
+- ✗ No drop shadows behind type, no glow, no neon
+- ✗ No emoji in UI chrome — Lucide icons only
+- ✗ No hardcoded hex codes outside this file
+- ✗ No serif on body or interactive elements. Serif is for headlines, KPI numerals, verdict banner only
+- ✗ No font weight above 500
+- ✗ No fintech colours (electric green, indigo) — claret-and-brass only
+- ✗ No pill shapes for buttons or cards. Pills only for status badges
+- ✗ No more than one brass button per screen
