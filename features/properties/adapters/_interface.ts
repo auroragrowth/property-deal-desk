@@ -18,6 +18,7 @@ export type NormalisedProperty = {
   listing_status: "active" | "under_offer" | "sstc" | "withdrawn";
   listed_at: Date;
   image_url: string | null;
+  estimated_monthly_rent: number | null;
   raw_payload: unknown;
 };
 

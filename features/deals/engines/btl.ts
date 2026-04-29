@@ -38,6 +38,12 @@ export const btlEngine: StrategyEngine = {
     // Rent: explicit override beats stored estimate; both are pence-per-month.
     const monthlyRent =
       assumptions.rent_pcm ?? property.estimated_monthly_rent ?? 0;
+    const rentSource: "override" | "estimated" | "missing" =
+      assumptions.rent_pcm !== undefined && assumptions.rent_pcm !== null
+        ? "override"
+        : property.estimated_monthly_rent && property.estimated_monthly_rent > 0
+          ? "estimated"
+          : "missing";
     const grossRent = monthlyRent * 12;
 
     const mgmtCost = grossRent * assumptions.mgmt_pct;
@@ -126,6 +132,7 @@ export const btlEngine: StrategyEngine = {
         cash_on_cash_roi: roi,
         gross_yield: grossYield,
         monthly_rent: monthlyRent,
+        rent_source: rentSource,
         monthly_mortgage: Math.round(monthlyMortgage),
         stress_2pct: {
           rate: stressRate,

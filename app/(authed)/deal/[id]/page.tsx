@@ -23,9 +23,16 @@ type Outputs = {
   monthly_cashflow?: number;
   monthly_mortgage?: number;
   monthly_rent?: number;
+  rent_source?: "override" | "estimated" | "missing";
   cash_on_cash_roi?: number;
   gross_yield?: number;
   stress_2pct?: { rate: number; monthly_cashflow: number };
+};
+
+const RENT_SOURCE_LABEL: Record<NonNullable<Outputs["rent_source"]>, string> = {
+  override: "your override",
+  estimated: "auto-estimated from yield benchmarks",
+  missing: "missing — set in your assumptions",
 };
 
 export default async function DealPage({
@@ -194,7 +201,10 @@ export default async function DealPage({
           <dl className="text-text-primary divide-border-strong/40 grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
             <Row label="Deposit" value={fmtPenceShort(o.deposit ?? 0)} />
             <Row label="Stamp duty (BTL)" value={fmtPenceShort(o.stamp_duty ?? 0)} />
-            <Row label="Monthly rent" value={`${fmtPenceShort(o.monthly_rent ?? 0)}/mo`} />
+            <Row
+              label="Monthly rent"
+              value={`${fmtPenceShort(o.monthly_rent ?? 0)}/mo${o.rent_source ? ` · ${RENT_SOURCE_LABEL[o.rent_source]}` : ""}`}
+            />
             <Row
               label="Monthly mortgage"
               value={`${fmtPenceShort(o.monthly_mortgage ?? 0)}/mo`}

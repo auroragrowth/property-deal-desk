@@ -33,6 +33,9 @@ export async function upsertProperty(np: NormalisedProperty) {
         ...(np.latitude !== null ? { latitude: np.latitude } : {}),
         ...(np.longitude !== null ? { longitude: np.longitude } : {}),
         ...(np.image_url ? { imageUrl: np.image_url } : {}),
+        ...(np.estimated_monthly_rent !== null
+          ? { estimatedMonthlyRent: np.estimated_monthly_rent }
+          : {}),
       })
       .where(eq(properties.id, existing.id))
       .returning();
@@ -56,6 +59,7 @@ export async function upsertProperty(np: NormalisedProperty) {
         listingPrice: np.listing_price,
         listingStatus: np.listing_status,
         imageUrl: np.image_url,
+        estimatedMonthlyRent: np.estimated_monthly_rent,
       })
       .returning();
     propertyRow = inserted;

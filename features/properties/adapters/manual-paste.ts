@@ -57,6 +57,7 @@ export const manualPasteAdapter: PropertyFeedAdapter = {
     const propertyType = pickType(jsonLd) ?? pickTypeFromText(html, og);
     const imageUrl = pickImage(jsonLd, og);
     const sourceListingId = extractListingId(url) ?? url;
+    const estimatedMonthlyRent = estimateRentPence(price, bedrooms);
 
     return {
       source: "manual",
@@ -78,6 +79,7 @@ export const manualPasteAdapter: PropertyFeedAdapter = {
       listing_status: "active",
       listed_at: new Date(),
       image_url: imageUrl,
+      estimated_monthly_rent: estimatedMonthlyRent,
       raw_payload: { jsonLd, og, portal: pickPortal(url) },
     };
   },
@@ -252,6 +254,19 @@ function pickBedrooms(jsonLd: unknown[]): number | null {
     if (typeof obj.numberOfRooms === "number") return obj.numberOfRooms;
   }
   return null;
+}
+
+// Rule-of-thumb monthly rent in pence based on UK BTL gross-yield benchmarks.
+// Smaller properties tend to higher yields, larger to lower. Wrong-but-useful;
+// replaces with PropertyData rents when that integration ships.
+function estimateRentPence(
+  pricePence: number,
+  bedrooms: number,
+): number | null {
+  if (pricePence <= 0) return null;
+  const beds = Number.isFinite(bedrooms) ? bedrooms : 0;
+  const yieldRate = beds <= 2 ? 0.066 : beds <= 4 ? 0.058 : 0.05;
+  return Math.round((pricePence * yieldRate) / 12);
 }
 
 function pickImage(
