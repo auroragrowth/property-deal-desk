@@ -106,6 +106,7 @@ If a feature isn't on the brief's "definitely in scope" list (§01), don't build
 - ✅ Week 9: deal analyser page (verdict, KPI grid, stress card, reasons, numbers detail)
 - ✅ Week 10: inline assumption editing on the deal page + per-run history (append-only deal_results)
 - ✅ Week 6: saved filters (name a search, re-apply via chip, delete)
-- ⏳ Weeks 11–12: per brief §12
+- ⏳ Week 11 (in progress): Vitest tests on the BTL engine + calc helpers (22 tests). Sentry/PostHog/a11y audit pending.
+- ⏳ Week 12: per brief §12
 
 When a week's deliverables ship, update the markers above and commit.

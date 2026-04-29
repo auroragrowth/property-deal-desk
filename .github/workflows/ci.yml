@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    name: Lint · Typecheck · Build
+    name: Lint · Typecheck · Test · Build
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: postgres://placeholder:placeholder@localhost:5432/dealdesk
@@ -29,4 +29,5 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm typecheck
+      - run: pnpm test
       - run: pnpm build
