@@ -102,9 +102,10 @@ If a feature isn't on the brief's "definitely in scope" list (§01), don't build
 - ✅ Week 4 (v1 dev variant): daily Vercel Cron refresh of manual-paste listings; PropertyData remains a stub
 - ✅ Week 5: dashboard list view + filters (postcode, price, beds, type, status) — bookmarkable URL params
 - ✅ Week 7: watchlist (add/remove from feed, sort, plan-gated via getEntitlements with Pro-trial fallback for pre-Stripe users)
+- ✅ Week 8: BTL engine (mortgage, stamp duty, ROI, gross yield, +2% stress) + assumption/criteria profiles with seeded defaults
+- ✅ Week 9: deal analyser page (verdict, KPI grid, stress card, reasons, numbers detail)
 - ⏳ Week 6: saved filters + filter chips
-- ⏳ Week 8: BTL engine + assumption_profiles + criteria_profiles
-- ⏳ Week 9: deal analyser page
-- ⏳ Weeks 10–12: per brief §12
+- ⏳ Week 10: inline assumption editing + result history
+- ⏳ Weeks 11–12: per brief §12
 
 When a week's deliverables ship, update the markers above and commit.

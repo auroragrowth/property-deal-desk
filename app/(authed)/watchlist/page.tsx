@@ -7,6 +7,7 @@ import {
   type WatchlistSort,
 } from "@/features/watchlist/queries";
 import { RemoveButton } from "@/features/watchlist/remove-button";
+import { AnalyseButton } from "@/features/deals/analyse-button";
 
 const formatPrice = (pence: number | null) =>
   pence === null ? "—" : `£${(pence / 100).toLocaleString("en-GB")}`;
@@ -151,20 +152,23 @@ export default async function WatchlistPage({
                     {item.bedrooms ?? "—"} bed · {item.propertyType ?? "—"} ·
                     added {formatAdded(item.addedAt)}
                   </p>
-                  <div className="mt-auto flex items-end justify-between gap-3 pt-4">
-                    {item.sourceUrl ? (
-                      <a
-                        href={item.sourceUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-accent text-xs font-medium underline underline-offset-2"
-                      >
-                        View on {portalLabel(host)} ↗
-                      </a>
-                    ) : (
-                      <span />
-                    )}
-                    <RemoveButton id={item.id} />
+                  <div className="mt-auto flex flex-col gap-3 pt-4">
+                    <AnalyseButton propertyId={item.propertyId} />
+                    <div className="flex items-end justify-between gap-3">
+                      {item.sourceUrl ? (
+                        <a
+                          href={item.sourceUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-accent text-xs font-medium underline underline-offset-2"
+                        >
+                          View on {portalLabel(host)} ↗
+                        </a>
+                      ) : (
+                        <span />
+                      )}
+                      <RemoveButton id={item.id} />
+                    </div>
                   </div>
                 </div>
               </li>
@@ -174,8 +178,8 @@ export default async function WatchlistPage({
       )}
 
       <p className="text-text-tertiary mt-8 text-xs">
-        Deal analyser ships in week 8. Until then, the watchlist holds
-        properties you want to come back to.
+        BTL analysis uses default assumptions (25% deposit, 5.49% rate, 25-year
+        repayment, £200/mo target cashflow). Inline editing ships in week 10.
       </p>
     </main>
   );
