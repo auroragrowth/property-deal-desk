@@ -34,7 +34,7 @@ Heritage is **light-mode-first**. The primary expression of the brand is on parc
   /* Text */
   --text-primary: #1a1410;   /* deep brown-black — headlines, body */
   --text-secondary: #6b5e4d; /* warm brown — labels, metadata */
-  --text-tertiary: #8a7d6b;  /* faded brown — hints, disabled, timestamps */
+  --text-tertiary: #75655a;  /* faded brown — hints, disabled, timestamps. Tuned to WCAG AA (4.79:1) on bg-page. */
   --text-on-strong: #f4ecd8; /* parchment — text on claret surfaces */
   --text-accent: #5b2330;    /* claret — italic emphasis in headlines */
 

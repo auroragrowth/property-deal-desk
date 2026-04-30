@@ -11,7 +11,7 @@
   /* Text */
   --text-primary: #1a1410;   /* deep brown-black */
   --text-secondary: #6b5e4d;
-  --text-tertiary: #8a7d6b;
+  --text-tertiary: #75655a;  /* WCAG AA on bg-page: 4.79:1 */
   --text-on-strong: #f4ecd8; /* parchment on claret */
   --text-accent: #5b2330;    /* claret — italic emphasis in headlines */
 
