@@ -5,6 +5,8 @@ import { savedFilters } from "@/lib/db/schema";
 import { listSavedFilters } from "@/features/properties/saved-filters-server";
 import { sanitiseFilter } from "@/features/properties/saved-filters";
 import { ensureLocalUser } from "@/lib/users/ensure-local";
+import { logAudit } from "@/lib/audit";
+import { track } from "@/lib/analytics/server";
 
 export async function GET() {
   const { userId } = await auth();
@@ -52,6 +54,15 @@ export async function POST(req: NextRequest) {
         filterJson: filter,
       })
       .returning();
+
+    await logAudit({
+      actorUserId: userId,
+      action: "create",
+      entity: "saved_filter",
+      entityId: row.id,
+      after: { name, filter },
+    });
+    await track(userId, "filter_saved", { name });
 
     return NextResponse.json({ id: row.id });
   } catch (err) {

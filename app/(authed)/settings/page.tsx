@@ -100,6 +100,21 @@ export default async function SettingsPage() {
         Email change, password change, 2FA toggle, and account deletion ship by
         week 12.
       </p>
+
+      <footer className="border-border text-text-tertiary mt-12 flex gap-4 border-t-[0.5px] pt-6 text-xs">
+        <Link
+          href="/terms"
+          className="hover:text-text-primary underline underline-offset-2"
+        >
+          Terms
+        </Link>
+        <Link
+          href="/privacy"
+          className="hover:text-text-primary underline underline-offset-2"
+        >
+          Privacy
+        </Link>
+      </footer>
     </main>
   );
 }

@@ -4,6 +4,7 @@ import { manualPasteAdapter } from "@/features/properties/adapters/manual-paste"
 import { lookupPostcode } from "@/features/properties/postcodes";
 import { upsertProperty } from "@/features/properties/upsert";
 import { emit } from "@/lib/events";
+import { track } from "@/lib/analytics/server";
 
 const SUPPORTED_HOSTS = /(rightmove|zoopla|purplebricks)\.co\.uk$/i;
 
@@ -110,6 +111,10 @@ export async function POST(req: NextRequest) {
 
   const property = await upsertProperty(normalised);
   await emit("property.ingested", { source: normalised.source, count: 1 });
+  await track(userId, "property_pasted", {
+    source: normalised.source,
+    propertyId: property.id,
+  });
 
   return NextResponse.json({
     property: {

@@ -281,11 +281,13 @@ function Field({
   suffix?: string;
   children: React.ReactNode;
 }) {
+  // Wrap so the label is implicitly associated with the input — no
+  // htmlFor/id pair needed, and screen readers + Lighthouse are happy.
   return (
-    <div>
-      <label className={labelClass}>{label}</label>
+    <label className="block">
+      <span className={labelClass}>{label}</span>
       {children}
-    </div>
+    </label>
   );
 }
 

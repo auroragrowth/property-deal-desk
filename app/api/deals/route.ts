@@ -2,6 +2,8 @@ import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 import { analyseProperty } from "@/features/deals/analyse";
 import { ensureLocalUser } from "@/lib/users/ensure-local";
+import { logAudit } from "@/lib/audit";
+import { track } from "@/lib/analytics/server";
 
 export async function POST(req: NextRequest) {
   try {
@@ -31,6 +33,19 @@ export async function POST(req: NextRequest) {
     await ensureLocalUser(userId);
 
     const { deal, result } = await analyseProperty(userId, propertyId, {
+      strategy,
+    });
+
+    await logAudit({
+      actorUserId: userId,
+      action: "create",
+      entity: "deal_result",
+      entityId: result.id,
+      after: { dealId: deal.id, pass: result.pass, strategy },
+    });
+    await track(userId, "deal_analysed", {
+      dealId: deal.id,
+      pass: result.pass,
       strategy,
     });
 

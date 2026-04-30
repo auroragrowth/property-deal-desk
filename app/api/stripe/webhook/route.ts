@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import type Stripe from "stripe";
+import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { stripeEvents, subscriptions } from "@/lib/db/schema";
 import { stripe } from "@/lib/stripe/server";
 import { planFromLookupKey } from "@/features/billing/plans";
+import { logAudit } from "@/lib/audit";
+import { track } from "@/lib/analytics/server";
+import {
+  sendDunningEmail,
+  sendTrialEndingEmail,
+} from "@/features/legal/emails";
 
 export async function POST(req: NextRequest) {
   const secret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -72,7 +79,17 @@ async function handleStripeEvent(event: Stripe.Event) {
           : session.subscription?.id;
       if (!subId) break;
       const sub = await stripe.subscriptions.retrieve(subId);
-      await upsertSubscription(sub, session.metadata?.clerk_user_id ?? undefined);
+      const userId = await upsertSubscription(
+        sub,
+        session.metadata?.clerk_user_id ?? undefined,
+      );
+      if (userId) {
+        const lookupKey = sub.items.data[0]?.price?.lookup_key ?? null;
+        await track(userId, "checkout_succeeded", {
+          plan: planFromLookupKey(lookupKey),
+          subscriptionId: sub.id,
+        });
+      }
       break;
     }
     case "customer.subscription.created":
@@ -83,9 +100,14 @@ async function handleStripeEvent(event: Stripe.Event) {
       break;
     }
     case "customer.subscription.trial_will_end": {
-      // TODO(week-12): send "your trial ends in 3 days" via Resend.
       const sub = event.data.object as Stripe.Subscription;
-      console.log(`[stripe] trial_will_end for subscription ${sub.id}`);
+      const userId =
+        typeof sub.metadata?.clerk_user_id === "string"
+          ? sub.metadata.clerk_user_id
+          : null;
+      if (userId) {
+        await sendTrialEndingEmail(userId, sub);
+      }
       break;
     }
     case "invoice.paid":
@@ -97,8 +119,27 @@ async function handleStripeEvent(event: Stripe.Event) {
           : invoice.subscription?.id;
       if (!subId) break;
       const sub = await stripe.subscriptions.retrieve(subId);
-      await upsertSubscription(sub);
-      // TODO(week-12): dunning email on payment_failed via Resend.
+      const userId = await upsertSubscription(sub);
+      if (userId) {
+        if (event.type === "invoice.payment_failed") {
+          await sendDunningEmail(userId, invoice);
+          await logAudit({
+            actorUserId: null,
+            action: "payment_failed",
+            entity: "subscription",
+            entityId: sub.id,
+            after: { invoiceId: invoice.id, status: sub.status },
+          });
+        } else {
+          await logAudit({
+            actorUserId: null,
+            action: "payment_succeeded",
+            entity: "subscription",
+            entityId: sub.id,
+            after: { invoiceId: invoice.id, status: sub.status },
+          });
+        }
+      }
       break;
     }
     default:
@@ -107,17 +148,18 @@ async function handleStripeEvent(event: Stripe.Event) {
   }
 }
 
+// Returns the clerkUserId if the upsert ran, else null.
 async function upsertSubscription(
   sub: Stripe.Subscription,
   clerkUserIdHint?: string,
-) {
+): Promise<string | null> {
   const clerkUserId =
     clerkUserIdHint ?? (sub.metadata?.clerk_user_id as string | undefined);
   if (!clerkUserId) {
     console.warn(
       `[stripe] subscription ${sub.id} missing clerk_user_id metadata`,
     );
-    return;
+    return null;
   }
 
   const item = sub.items.data[0];
@@ -146,6 +188,11 @@ async function upsertSubscription(
     updatedAt: new Date(),
   };
 
+  // Snapshot prior row for audit + plan-change detection.
+  const existing = await db.query.subscriptions.findFirst({
+    where: eq(subscriptions.userId, clerkUserId),
+  });
+
   await db
     .insert(subscriptions)
     .values(values)
@@ -162,4 +209,32 @@ async function upsertSubscription(
         updatedAt: values.updatedAt,
       },
     });
+
+  await logAudit({
+    actorUserId: null,
+    action: existing ? "update" : "create",
+    entity: "subscription",
+    entityId: sub.id,
+    before: existing
+      ? { plan: existing.plan, status: existing.status }
+      : null,
+    after: { plan: values.plan, status: values.status },
+  });
+
+  if (existing && existing.plan !== values.plan) {
+    await track(clerkUserId, "plan_changed", {
+      from: existing.plan,
+      to: values.plan,
+    });
+    await logAudit({
+      actorUserId: null,
+      action: "plan_changed",
+      entity: "subscription",
+      entityId: sub.id,
+      before: { plan: existing.plan },
+      after: { plan: values.plan },
+    });
+  }
+
+  return clerkUserId;
 }

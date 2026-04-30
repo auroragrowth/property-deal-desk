@@ -4,6 +4,7 @@ import type { WebhookEvent } from "@clerk/nextjs/server";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { users } from "@/lib/db/schema";
+import { track } from "@/lib/analytics/server";
 
 export async function POST(req: NextRequest) {
   const secret = process.env.CLERK_WEBHOOK_SECRET;
@@ -54,6 +55,7 @@ export async function POST(req: NextRequest) {
           role: "user",
         })
         .onConflictDoNothing({ target: users.clerkId });
+      await track(id, "signup", { email });
       break;
     }
     case "user.updated": {

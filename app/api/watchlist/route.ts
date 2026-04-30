@@ -10,6 +10,8 @@ import {
 } from "@/features/watchlist/queries";
 import { emit } from "@/lib/events";
 import { ensureLocalUser } from "@/lib/users/ensure-local";
+import { logAudit } from "@/lib/audit";
+import { track } from "@/lib/analytics/server";
 
 export async function GET(req: NextRequest) {
   const { userId } = await auth();
@@ -82,6 +84,14 @@ export async function POST(req: NextRequest) {
 
     if (item) {
       await emit("watchlist.added", { userId, propertyId });
+      await logAudit({
+        actorUserId: userId,
+        action: "create",
+        entity: "watchlist",
+        entityId: item.id,
+        after: { propertyId, note: item.note },
+      });
+      await track(userId, "watchlist_added", { propertyId });
       return NextResponse.json({ item });
     }
 

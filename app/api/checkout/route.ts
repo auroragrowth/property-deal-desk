@@ -5,6 +5,7 @@ import { db } from "@/lib/db/client";
 import { subscriptions } from "@/lib/db/schema";
 import { stripe } from "@/lib/stripe/server";
 import { isPlanLookupKey } from "@/features/billing/plans";
+import { track } from "@/lib/analytics/server";
 
 export async function POST(req: NextRequest) {
   const { userId } = await auth();
@@ -80,6 +81,8 @@ export async function POST(req: NextRequest) {
       { status: 500 },
     );
   }
+
+  await track(userId, "checkout_started", { lookupKey });
 
   return NextResponse.json({ url: session.url });
 }

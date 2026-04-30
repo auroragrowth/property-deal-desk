@@ -31,6 +31,20 @@ export default function MarketingPage() {
       <p className="text-text-tertiary mt-4 text-xs">
         14-day trial. Card captured. Cancel anytime.
       </p>
+      <footer className="text-text-tertiary mt-12 flex gap-4 text-xs">
+        <Link
+          href="/terms"
+          className="hover:text-text-primary underline underline-offset-2"
+        >
+          Terms
+        </Link>
+        <Link
+          href="/privacy"
+          className="hover:text-text-primary underline underline-offset-2"
+        >
+          Privacy
+        </Link>
+      </footer>
     </main>
   );
 }

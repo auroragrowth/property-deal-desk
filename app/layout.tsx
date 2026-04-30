@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Instrument_Serif, JetBrains_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
+import { PostHogProvider } from "@/lib/analytics/client";
+import { CookieBanner } from "@/features/legal/cookie-banner";
 import "./globals.css";
 
 const geist = Geist({
@@ -33,13 +35,16 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="en">
-        <body
-          className={`${geist.variable} ${instrumentSerif.variable} ${jetbrainsMono.variable} antialiased`}
-        >
-          {children}
-        </body>
-      </html>
+      <PostHogProvider>
+        <html lang="en">
+          <body
+            className={`${geist.variable} ${instrumentSerif.variable} ${jetbrainsMono.variable} antialiased`}
+          >
+            {children}
+            <CookieBanner />
+          </body>
+        </html>
+      </PostHogProvider>
     </ClerkProvider>
   );
 }

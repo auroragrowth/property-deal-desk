@@ -8,6 +8,8 @@ import type {
   AssumptionProfile,
   CriteriaProfile,
 } from "@/features/deals/engines/_interface";
+import { logAudit } from "@/lib/audit";
+import { track } from "@/lib/analytics/server";
 
 // Re-runs the engine with optional inline overrides. Per brief §09, every
 // run inserts a fresh deal_results row — never updates.
@@ -83,6 +85,25 @@ export async function POST(
       strategy: deal.strategy ?? "btl",
       assumptionOverrides,
       criteriaOverrides,
+    });
+
+    await logAudit({
+      actorUserId: userId,
+      action: "create",
+      entity: "deal_result",
+      entityId: result.id,
+      after: {
+        dealId: deal.id,
+        pass: result.pass,
+        strategy: deal.strategy ?? "btl",
+        rerun: true,
+      },
+    });
+    await track(userId, "deal_analysed", {
+      dealId: deal.id,
+      pass: result.pass,
+      strategy: deal.strategy ?? "btl",
+      rerun: true,
     });
 
     return NextResponse.json({ resultId: result.id });
