@@ -5,6 +5,7 @@ import { lookupPostcode } from "@/features/properties/postcodes";
 import { upsertProperty } from "@/features/properties/upsert";
 import { emit } from "@/lib/events";
 import { track } from "@/lib/analytics/server";
+import { logAudit } from "@/lib/audit";
 
 const SUPPORTED_HOSTS = /(rightmove|zoopla|purplebricks)\.co\.uk$/i;
 
@@ -114,6 +115,13 @@ export async function POST(req: NextRequest) {
   await track(userId, "property_pasted", {
     source: normalised.source,
     propertyId: property.id,
+  });
+  await logAudit({
+    actorUserId: userId,
+    action: "create",
+    entity: "property",
+    entityId: property.id,
+    after: { source: normalised.source, postcode: property.postcode },
   });
 
   return NextResponse.json({

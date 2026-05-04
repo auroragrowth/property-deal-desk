@@ -10,13 +10,14 @@ export default async function WelcomePage() {
         You&apos;re <em className="text-text-accent">in</em>.
       </h1>
       <p className="text-text-secondary mt-4 text-base">
-        Your 14-day trial has started. We&apos;ll email you 3 days before it ends.
+        Your 14-day trial has started. Take five minutes to set up your first
+        deal — we&apos;ll email you 3 days before the trial ends.
       </p>
       <Link
         href="/dashboard"
-        className="bg-bg-strong text-text-on-strong mt-8 inline-flex h-10 items-center rounded-md px-5 text-sm font-medium"
+        className="bg-bg-strong text-text-on-strong mt-8 inline-flex h-11 items-center rounded-md px-5 text-sm font-medium"
       >
-        Go to dashboard
+        Start the checklist →
       </Link>
     </main>
   );

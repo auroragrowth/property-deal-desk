@@ -11,7 +11,8 @@ export type AuditEntity =
   | "watchlist"
   | "saved_filter"
   | "deal"
-  | "deal_result";
+  | "deal_result"
+  | "property";
 
 export type AuditAction =
   | "create"

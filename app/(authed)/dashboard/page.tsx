@@ -11,6 +11,8 @@ import { watchlistMap } from "@/features/watchlist/queries";
 import { WatchlistButton } from "@/features/watchlist/watchlist-button";
 import { listSavedFilters } from "@/features/properties/saved-filters-server";
 import { SavedFilterChips } from "@/features/properties/saved-filter-chips";
+import { getOnboardingProgress } from "@/features/onboarding/progress";
+import { OnboardingChecklist } from "@/features/onboarding/checklist";
 
 const formatPrice = (pence: number | null) =>
   pence === null ? "—" : `£${(pence / 100).toLocaleString("en-GB")}`;
@@ -63,10 +65,11 @@ export default async function DashboardPage({
     status: sp.status === "all" ? "all" : "active",
   };
 
-  const [recent, watched, savedFilters] = await Promise.all([
+  const [recent, watched, savedFilters, onboarding] = await Promise.all([
     searchProperties(filter),
     watchlistMap(userId),
     listSavedFilters(userId),
+    getOnboardingProgress(userId),
   ]);
 
   return (
@@ -84,6 +87,7 @@ export default async function DashboardPage({
       </header>
 
       <div className="space-y-4">
+        <OnboardingChecklist {...onboarding} />
         <PasteForm />
         <Suspense
           fallback={
@@ -108,10 +112,13 @@ export default async function DashboardPage({
           </h2>
         </div>
         {recent.length === 0 ? (
-          <div className="border-border bg-bg-surface rounded-lg border-[0.5px] p-8 text-center">
-            <p className="text-text-secondary text-sm">
-              No properties match. Try clearing filters, or paste a listing URL
-              above to add one.
+          <div className="border-border bg-bg-surface rounded-lg border-[0.5px] p-10 text-center">
+            <p className="text-text-primary font-serif text-xl">
+              Your radar is <em className="text-text-accent">clear</em>.
+            </p>
+            <p className="text-text-secondary mx-auto mt-2 max-w-sm text-sm">
+              Paste a listing above to add your first property — or loosen the
+              filters to see what&apos;s already there.
             </p>
           </div>
         ) : (
