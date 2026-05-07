@@ -21,6 +21,8 @@
   "dependencies": {
     "@clerk/nextjs": "^6.13.0",
     "@sentry/nextjs": "^10.51.0",
+    "@supabase/ssr": "^0.10.3",
+    "@supabase/supabase-js": "^2.105.3",
     "drizzle-orm": "^0.36.4",
     "next": "15.5.15",
     "postgres": "^3.4.5",
