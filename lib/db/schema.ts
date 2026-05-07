@@ -24,9 +24,11 @@ const geographyPoint = customType<{ data: string }>({
   },
 });
 
+// users.id mirrors auth.users(id). The DB trigger on_auth_user_created
+// (migration 0003) inserts a row here on signup, so we never INSERT into
+// public.users from app code.
 export const users = pgTable("users", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  clerkId: text("clerk_id").notNull().unique(),
+  id: uuid("id").primaryKey(),
   email: text("email").notNull(),
   fullName: text("full_name"),
   role: text("role").notNull().default("user"),
@@ -36,10 +38,10 @@ export const users = pgTable("users", {
 
 export const subscriptions = pgTable("subscriptions", {
   id: uuid("id").primaryKey().defaultRandom(),
-  userId: text("user_id")
+  userId: uuid("user_id")
     .notNull()
     .unique()
-    .references(() => users.clerkId),
+    .references(() => users.id, { onDelete: "cascade" }),
   stripeCustomerId: text("stripe_customer_id").notNull(),
   stripeSubscriptionId: text("stripe_subscription_id").notNull(),
   plan: text("plan").notNull(),
@@ -121,9 +123,9 @@ export const propertyListings = pgTable(
 
 export const savedFilters = pgTable("saved_filters", {
   id: uuid("id").primaryKey().defaultRandom(),
-  userId: text("user_id")
+  userId: uuid("user_id")
     .notNull()
-    .references(() => users.clerkId),
+    .references(() => users.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   filterJson: jsonb("filter_json").notNull(),
   isActive: boolean("is_active").default(true),
@@ -134,9 +136,9 @@ export const watchlist = pgTable(
   "watchlist",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    userId: text("user_id")
+    userId: uuid("user_id")
       .notNull()
-      .references(() => users.clerkId),
+      .references(() => users.id, { onDelete: "cascade" }),
     propertyId: uuid("property_id")
       .notNull()
       .references(() => properties.id),
@@ -148,9 +150,9 @@ export const watchlist = pgTable(
 
 export const assumptionProfiles = pgTable("assumption_profiles", {
   id: uuid("id").primaryKey().defaultRandom(),
-  userId: text("user_id")
+  userId: uuid("user_id")
     .notNull()
-    .references(() => users.clerkId),
+    .references(() => users.id, { onDelete: "cascade" }),
   name: text("name").notNull().default("Default"),
   depositPct: numeric("deposit_pct", { precision: 5, scale: 4 }).default(
     "0.25",
@@ -166,9 +168,9 @@ export const assumptionProfiles = pgTable("assumption_profiles", {
 
 export const criteriaProfiles = pgTable("criteria_profiles", {
   id: uuid("id").primaryKey().defaultRandom(),
-  userId: text("user_id")
+  userId: uuid("user_id")
     .notNull()
-    .references(() => users.clerkId),
+    .references(() => users.id, { onDelete: "cascade" }),
   name: text("name").notNull().default("Default"),
   minCashflow: integer("min_cashflow").default(20000),
   minRoi: numeric("min_roi", { precision: 5, scale: 4 }).default("0.08"),
@@ -179,9 +181,9 @@ export const deals = pgTable(
   "deals",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    userId: text("user_id")
+    userId: uuid("user_id")
       .notNull()
-      .references(() => users.clerkId),
+      .references(() => users.id, { onDelete: "cascade" }),
     propertyId: uuid("property_id")
       .notNull()
       .references(() => properties.id),
@@ -230,7 +232,7 @@ export const dealResults = pgTable(
 
 export const auditLog = pgTable("audit_log", {
   id: bigserial("id", { mode: "number" }).primaryKey(),
-  actorUserId: text("actor_user_id"),
+  actorUserId: uuid("actor_user_id"),
   action: text("action").notNull(),
   entity: text("entity").notNull(),
   entityId: text("entity_id"),
