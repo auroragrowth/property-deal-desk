@@ -1,19 +1,35 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextRequest, NextResponse } from "next/server";
+import { updateSession } from "@/lib/supabase/middleware";
 
-const isPublicRoute = createRouteMatcher([
+const PUBLIC_PREFIXES = [
   "/",
-  "/sign-in(.*)",
-  "/sign-up(.*)",
-  "/api/clerk/webhook",
+  "/sign-in",
+  "/sign-up",
+  "/auth/callback",
+  "/terms",
+  "/privacy",
   "/api/stripe/webhook",
-  "/api/cron/(.*)",
-]);
+  "/api/cron",
+];
 
-export default clerkMiddleware(async (auth, req) => {
-  if (!isPublicRoute(req)) {
-    await auth.protect();
+function isPublic(pathname: string): boolean {
+  return PUBLIC_PREFIXES.some((p) =>
+    p === "/" ? pathname === "/" : pathname === p || pathname.startsWith(p + "/"),
+  );
+}
+
+export async function middleware(req: NextRequest) {
+  const { res, user } = await updateSession(req);
+
+  if (!isPublic(req.nextUrl.pathname) && !user) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/sign-in";
+    url.searchParams.set("next", req.nextUrl.pathname);
+    return NextResponse.redirect(url);
   }
-});
+
+  return res;
+}
 
 export const config = {
   matcher: [

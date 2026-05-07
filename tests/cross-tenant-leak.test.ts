@@ -78,9 +78,9 @@ describe("cross-tenant leak guard", () => {
     "%s authenticates and scopes to the caller",
     (file) => {
       const src = read(file);
-      // Must import auth() from Clerk and read userId before doing any work.
-      expect(src).toMatch(/from "@clerk\/nextjs\/server"/);
-      expect(src).toMatch(/await auth\(\)/);
+      // Must read the user via our Supabase auth helper before any work.
+      expect(src).toMatch(/from "@\/lib\/auth\/server"/);
+      expect(src).toMatch(/getUser(IdOrNull)?\(\)/);
       expect(src).toMatch(/userId/);
       // Must early-return on no userId (401 Unauthorized).
       expect(src).toMatch(/Unauthorized/);
