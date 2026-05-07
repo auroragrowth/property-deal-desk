@@ -81,7 +81,7 @@ async function handleStripeEvent(event: Stripe.Event) {
       const sub = await stripe.subscriptions.retrieve(subId);
       const userId = await upsertSubscription(
         sub,
-        session.metadata?.clerk_user_id ?? undefined,
+        session.metadata?.user_id ?? undefined,
       );
       if (userId) {
         const lookupKey = sub.items.data[0]?.price?.lookup_key ?? null;
@@ -102,7 +102,7 @@ async function handleStripeEvent(event: Stripe.Event) {
     case "customer.subscription.trial_will_end": {
       const sub = event.data.object as Stripe.Subscription;
       const userId =
-        typeof sub.metadata?.clerk_user_id === "string"
+        typeof sub.metadata?.user_id === "string"
           ? sub.metadata.clerk_user_id
           : null;
       if (userId) {
@@ -148,16 +148,16 @@ async function handleStripeEvent(event: Stripe.Event) {
   }
 }
 
-// Returns the clerkUserId if the upsert ran, else null.
+// Returns the userId if the upsert ran, else null.
 async function upsertSubscription(
   sub: Stripe.Subscription,
-  clerkUserIdHint?: string,
+  userIdHint?: string,
 ): Promise<string | null> {
-  const clerkUserId =
-    clerkUserIdHint ?? (sub.metadata?.clerk_user_id as string | undefined);
-  if (!clerkUserId) {
+  const userId =
+    userIdHint ?? (sub.metadata?.user_id as string | undefined);
+  if (!userId) {
     console.warn(
-      `[stripe] subscription ${sub.id} missing clerk_user_id metadata`,
+      `[stripe] subscription ${sub.id} missing user_id metadata`,
     );
     return null;
   }
@@ -177,7 +177,7 @@ async function upsertSubscription(
     null;
 
   const values = {
-    userId: clerkUserId,
+    userId,
     stripeCustomerId: customerId,
     stripeSubscriptionId: sub.id,
     plan,
@@ -190,7 +190,7 @@ async function upsertSubscription(
 
   // Snapshot prior row for audit + plan-change detection.
   const existing = await db.query.subscriptions.findFirst({
-    where: eq(subscriptions.userId, clerkUserId),
+    where: eq(subscriptions.userId, userId),
   });
 
   await db
@@ -222,7 +222,7 @@ async function upsertSubscription(
   });
 
   if (existing && existing.plan !== values.plan) {
-    await track(clerkUserId, "plan_changed", {
+    await track(userId, "plan_changed", {
       from: existing.plan,
       to: values.plan,
     });
@@ -236,5 +236,5 @@ async function upsertSubscription(
     });
   }
 
-  return clerkUserId;
+  return userId;
 }

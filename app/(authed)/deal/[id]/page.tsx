@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
-import { auth } from "@clerk/nextjs/server";
+import { getUserIdOrNull } from "@/lib/auth/server";
 import { getDealView, type DealResultView } from "@/features/deals/queries";
 import { fmtPenceShort, fmtPercent } from "@/lib/btl/calc";
 import { AssumptionForm } from "@/features/deals/assumption-form";
@@ -41,7 +41,7 @@ export default async function DealPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { userId } = await auth();
+  const userId = await getUserIdOrNull();
   if (!userId) redirect("/sign-in");
   const { id } = await params;
 

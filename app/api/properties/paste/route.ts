@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { getUserIdOrNull } from "@/lib/auth/server";
 import { NextRequest, NextResponse } from "next/server";
 import { manualPasteAdapter } from "@/features/properties/adapters/manual-paste";
 import { lookupPostcode } from "@/features/properties/postcodes";
@@ -10,7 +10,7 @@ import { logAudit } from "@/lib/audit";
 const SUPPORTED_HOSTS = /(rightmove|zoopla|purplebricks)\.co\.uk$/i;
 
 export async function POST(req: NextRequest) {
-  const { userId } = await auth();
+  const userId = await getUserIdOrNull();
   if (!userId) {
     return NextResponse.json(
       { error: { code: "auth", message: "Unauthorized" } },

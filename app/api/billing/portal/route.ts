@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { getUserIdOrNull } from "@/lib/auth/server";
 import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
@@ -6,7 +6,7 @@ import { subscriptions } from "@/lib/db/schema";
 import { stripe } from "@/lib/stripe/server";
 
 export async function POST(req: NextRequest) {
-  const { userId } = await auth();
+  const userId = await getUserIdOrNull();
   if (!userId) {
     return NextResponse.json(
       { error: { code: "auth", message: "Unauthorized" } },

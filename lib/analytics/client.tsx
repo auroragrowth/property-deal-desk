@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
 import posthog from "posthog-js";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 const KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY;
 const HOST =
@@ -22,22 +22,30 @@ function ensureInit() {
 }
 
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
-  const { isLoaded, isSignedIn, user } = useUser();
-
   useEffect(() => {
     ensureInit();
-  }, []);
+    if (!KEY) return;
 
-  useEffect(() => {
-    if (!KEY || !isLoaded) return;
-    if (isSignedIn && user) {
-      posthog.identify(user.id, {
-        email: user.primaryEmailAddress?.emailAddress,
-      });
-    } else {
-      posthog.reset();
-    }
-  }, [isLoaded, isSignedIn, user]);
+    const supabase = getSupabaseBrowserClient();
+
+    // Identify on initial load.
+    void supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) posthog.identify(user.id, { email: user.email });
+    });
+
+    // Track sign-in / sign-out within the SPA session.
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session?.user) {
+        posthog.identify(session.user.id, { email: session.user.email });
+      } else if (event === "SIGNED_OUT") {
+        posthog.reset();
+      }
+    });
+
+    return () => {
+      sub.subscription.unsubscribe();
+    };
+  }, []);
 
   return <>{children}</>;
 }

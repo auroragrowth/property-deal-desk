@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { auth } from "@clerk/nextjs/server";
+import { getUserIdOrNull } from "@/lib/auth/server";
 import { redirect } from "next/navigation";
 import { PasteForm } from "@/features/properties/paste-form";
 import { DashboardFilters } from "@/features/properties/dashboard-filters";
@@ -45,7 +45,7 @@ export default async function DashboardPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const { userId } = await auth();
+  const userId = await getUserIdOrNull();
   if (!userId) redirect("/sign-in");
   const sp = await searchParams;
 

@@ -1,15 +1,14 @@
-import { auth } from "@clerk/nextjs/server";
+import { getUserIdOrNull } from "@/lib/auth/server";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
 import { savedFilters } from "@/lib/db/schema";
 import { listSavedFilters } from "@/features/properties/saved-filters-server";
 import { sanitiseFilter } from "@/features/properties/saved-filters";
-import { ensureLocalUser } from "@/lib/users/ensure-local";
 import { logAudit } from "@/lib/audit";
 import { track } from "@/lib/analytics/server";
 
 export async function GET() {
-  const { userId } = await auth();
+  const userId = await getUserIdOrNull();
   if (!userId) {
     return NextResponse.json(
       { error: { code: "auth", message: "Unauthorized" } },
@@ -22,7 +21,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId } = await auth();
+    const userId = await getUserIdOrNull();
     if (!userId) {
       return NextResponse.json(
         { error: { code: "auth", message: "Unauthorized" } },
@@ -43,8 +42,6 @@ export async function POST(req: NextRequest) {
       );
     }
     const filter = sanitiseFilter(body.filter);
-
-    await ensureLocalUser(userId);
 
     const [row] = await db
       .insert(savedFilters)

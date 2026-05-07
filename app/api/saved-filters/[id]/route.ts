@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { getUserIdOrNull } from "@/lib/auth/server";
 import { and, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
@@ -9,7 +9,7 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const { userId } = await auth();
+  const userId = await getUserIdOrNull();
   if (!userId) {
     return NextResponse.json(
       { error: { code: "auth", message: "Unauthorized" } },

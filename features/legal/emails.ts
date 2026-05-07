@@ -14,25 +14,25 @@ function getResend(): Resend | null {
   return new Resend(apiKey);
 }
 
-async function userEmail(clerkUserId: string): Promise<string | null> {
+async function userEmail(userId: string): Promise<string | null> {
   const u = await db.query.users.findFirst({
-    where: eq(users.clerkId, clerkUserId),
+    where: eq(users.id, userId),
   });
   return u?.email ?? null;
 }
 
 export async function sendTrialEndingEmail(
-  clerkUserId: string,
+  userId: string,
   sub: Stripe.Subscription,
 ): Promise<void> {
   const resend = getResend();
   if (!resend) {
     console.log(
-      `[email] trial_ending stub for user=${clerkUserId} sub=${sub.id} (no RESEND_API_KEY)`,
+      `[email] trial_ending stub for user=${userId} sub=${sub.id} (no RESEND_API_KEY)`,
     );
     return;
   }
-  const to = await userEmail(clerkUserId);
+  const to = await userEmail(userId);
   if (!to) return;
   const trialEnd = sub.trial_end
     ? new Date(sub.trial_end * 1000).toLocaleDateString("en-GB")
@@ -55,17 +55,17 @@ export async function sendTrialEndingEmail(
 }
 
 export async function sendDunningEmail(
-  clerkUserId: string,
+  userId: string,
   invoice: Stripe.Invoice,
 ): Promise<void> {
   const resend = getResend();
   if (!resend) {
     console.log(
-      `[email] dunning stub for user=${clerkUserId} invoice=${invoice.id} (no RESEND_API_KEY)`,
+      `[email] dunning stub for user=${userId} invoice=${invoice.id} (no RESEND_API_KEY)`,
     );
     return;
   }
-  const to = await userEmail(clerkUserId);
+  const to = await userEmail(userId);
   if (!to) return;
   try {
     await resend.emails.send({

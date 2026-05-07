@@ -1,4 +1,4 @@
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { getUser } from "@/lib/auth/server";
 import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
@@ -8,7 +8,8 @@ import { isPlanLookupKey } from "@/features/billing/plans";
 import { track } from "@/lib/analytics/server";
 
 export async function POST(req: NextRequest) {
-  const { userId } = await auth();
+  const user = await getUser();
+  const userId = user?.id;
   if (!userId) {
     return NextResponse.json(
       { error: { code: "auth", message: "Unauthorized" } },
@@ -51,11 +52,9 @@ export async function POST(req: NextRequest) {
   if (existing?.stripeCustomerId) {
     customerId = existing.stripeCustomerId;
   } else {
-    const user = await currentUser();
-    const email = user?.emailAddresses[0]?.emailAddress;
     const customer = await stripe.customers.create({
-      metadata: { clerk_user_id: userId },
-      ...(email ? { email } : {}),
+      metadata: { user_id: userId },
+      ...(user?.email ? { email: user.email } : {}),
     });
     customerId = customer.id;
   }
@@ -67,7 +66,7 @@ export async function POST(req: NextRequest) {
     line_items: [{ price: price.id, quantity: 1 }],
     subscription_data: {
       trial_period_days: 14,
-      metadata: { clerk_user_id: userId },
+      metadata: { user_id: userId },
     },
     success_url: `${origin}/onboarding/welcome?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/onboarding/plan`,

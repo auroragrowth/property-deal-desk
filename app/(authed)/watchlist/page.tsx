@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { auth } from "@clerk/nextjs/server";
+import { getUserIdOrNull } from "@/lib/auth/server";
 import { getEntitlements } from "@/lib/entitlements";
 import {
   listWatchlist,
@@ -44,7 +44,7 @@ export default async function WatchlistPage({
 }: {
   searchParams: Promise<{ sort?: string }>;
 }) {
-  const { userId } = await auth();
+  const userId = await getUserIdOrNull();
   if (!userId) redirect("/sign-in");
   const sp = await searchParams;
   const sort: WatchlistSort = SORTS.some((s) => s.value === sp.sort)

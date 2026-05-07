@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { getUserIdOrNull } from "@/lib/auth/server";
 import { and, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
@@ -9,12 +9,11 @@ import {
   watchlistCount,
 } from "@/features/watchlist/queries";
 import { emit } from "@/lib/events";
-import { ensureLocalUser } from "@/lib/users/ensure-local";
 import { logAudit } from "@/lib/audit";
 import { track } from "@/lib/analytics/server";
 
 export async function GET(req: NextRequest) {
-  const { userId } = await auth();
+  const userId = await getUserIdOrNull();
   if (!userId) {
     return NextResponse.json(
       { error: { code: "auth", message: "Unauthorized" } },
@@ -33,7 +32,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId } = await auth();
+    const userId = await getUserIdOrNull();
     if (!userId) {
       return NextResponse.json(
         { error: { code: "auth", message: "Unauthorized" } },
@@ -55,9 +54,6 @@ export async function POST(req: NextRequest) {
         { status: 400 },
       );
     }
-
-    // FK to users.clerk_id requires the local row exists.
-    await ensureLocalUser(userId);
 
     // Plan limit (brief §08, principle 4)
     const ent = await getEntitlements(userId);

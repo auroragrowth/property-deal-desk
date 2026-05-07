@@ -1,13 +1,12 @@
-import { auth } from "@clerk/nextjs/server";
+import { getUserIdOrNull } from "@/lib/auth/server";
 import { NextRequest, NextResponse } from "next/server";
 import { analyseProperty } from "@/features/deals/analyse";
-import { ensureLocalUser } from "@/lib/users/ensure-local";
 import { logAudit } from "@/lib/audit";
 import { track } from "@/lib/analytics/server";
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId } = await auth();
+    const userId = await getUserIdOrNull();
     if (!userId) {
       return NextResponse.json(
         { error: { code: "auth", message: "Unauthorized" } },
@@ -29,8 +28,6 @@ export async function POST(req: NextRequest) {
         { status: 400 },
       );
     }
-
-    await ensureLocalUser(userId);
 
     const { deal, result } = await analyseProperty(userId, propertyId, {
       strategy,

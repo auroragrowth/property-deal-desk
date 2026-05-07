@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { getUser } from "@/lib/auth/server";
 import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
@@ -7,12 +7,11 @@ import { subscriptions } from "@/lib/db/schema";
 import { ManageBillingButton } from "@/features/billing/manage-billing-button";
 
 export default async function SettingsPage() {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
+  const user = await getUser();
+  if (!user) redirect("/sign-in");
 
-  const user = await currentUser();
   const sub = await db.query.subscriptions.findFirst({
-    where: eq(subscriptions.userId, userId),
+    where: eq(subscriptions.userId, user.id),
   });
 
   return (
@@ -31,13 +30,11 @@ export default async function SettingsPage() {
         <dl className="border-border bg-bg-surface divide-border divide-y rounded-lg border-[0.5px]">
           <div className="flex items-baseline justify-between p-4">
             <dt className="text-text-tertiary text-sm">Email</dt>
-            <dd className="text-text-primary text-sm">
-              {user?.emailAddresses[0]?.emailAddress ?? "—"}
-            </dd>
+            <dd className="text-text-primary text-sm">{user.email ?? "—"}</dd>
           </div>
           <div className="flex items-baseline justify-between p-4">
             <dt className="text-text-tertiary text-sm">Name</dt>
-            <dd className="text-text-primary text-sm">{user?.fullName ?? "—"}</dd>
+            <dd className="text-text-primary text-sm">{user.fullName ?? "—"}</dd>
           </div>
         </dl>
       </section>
