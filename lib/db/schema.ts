@@ -230,6 +230,70 @@ export const dealResults = pgTable(
   ],
 );
 
+// Viewings — mobile capture during in-person property viewings.
+// One viewing → many rooms → many photos. Property link is optional
+// because users may capture a viewing for a property not yet in the
+// `properties` table; it gets attached later via the URL or address.
+export const viewings = pgTable(
+  "viewings",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    propertyId: uuid("property_id").references(() => properties.id, {
+      onDelete: "set null",
+    }),
+    propertyUrl: text("property_url"),
+    propertyAddress: text("property_address"),
+    propertyPostcode: text("property_postcode"),
+    propertyPricePence: integer("property_price_pence"),
+    overallNotes: text("overall_notes"),
+    visitedAt: timestamp("visited_at", { withTimezone: true }).defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+  },
+  (t) => [
+    index("viewings_user_visited_idx").on(t.userId, t.visitedAt.desc()),
+  ],
+);
+
+export const viewingRooms = pgTable(
+  "viewing_rooms",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    viewingId: uuid("viewing_id")
+      .notNull()
+      .references(() => viewings.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    notes: text("notes"),
+    position: integer("position").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  },
+  (t) => [index("viewing_rooms_viewing_idx").on(t.viewingId, t.position)],
+);
+
+export const viewingPhotos = pgTable(
+  "viewing_photos",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    viewingId: uuid("viewing_id")
+      .notNull()
+      .references(() => viewings.id, { onDelete: "cascade" }),
+    roomId: uuid("room_id").references(() => viewingRooms.id, {
+      onDelete: "set null",
+    }),
+    storagePath: text("storage_path").notNull(),
+    caption: text("caption"),
+    position: integer("position").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  },
+  (t) => [
+    index("viewing_photos_room_idx").on(t.roomId, t.position),
+    index("viewing_photos_viewing_idx").on(t.viewingId, t.position),
+  ],
+);
+
 export const auditLog = pgTable("audit_log", {
   id: bigserial("id", { mode: "number" }).primaryKey(),
   actorUserId: uuid("actor_user_id"),

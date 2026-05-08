@@ -72,6 +72,89 @@ export type SourcedHit = PropertyDataItem & {
   matched_lists: string[];
 };
 
+// ─── /sold-prices and /rents (comparables for viewings) ─────────────
+
+export type SoldPriceItem = {
+  date: string;
+  price: number;
+  type?: string;
+  bedrooms?: number;
+  address?: string;
+};
+
+export type SoldPricesResponse = {
+  data?: {
+    average?: number;
+    average_per_sqf?: number;
+    points_analysed?: number;
+    raw_data?: SoldPriceItem[];
+  };
+  status?: string;
+};
+
+export async function fetchSoldPrices(q: {
+  postcode: string;
+  bedrooms?: number;
+  type?: string;
+  maxAge?: number;
+}): Promise<SoldPricesResponse> {
+  const apiKey = process.env.PROPERTYDATA_API_KEY;
+  if (!apiKey) throw new PropertyDataConfigError("PROPERTYDATA_API_KEY not set");
+
+  const params = new URLSearchParams({ key: apiKey, postcode: q.postcode });
+  if (q.bedrooms != null) params.set("bedrooms", String(q.bedrooms));
+  if (q.type) params.set("type", q.type);
+  if (q.maxAge != null) params.set("max_age", String(q.maxAge));
+
+  const res = await fetch(`${BASE_URL}/sold-prices?${params}`, {
+    headers: { Accept: "application/json" },
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new PropertyDataApiError(
+      `PropertyData /sold-prices ${res.status}: ${body.slice(0, 200)}`,
+      res.status,
+    );
+  }
+  return (await res.json()) as SoldPricesResponse;
+}
+
+export type RentsResponse = {
+  data?: {
+    average?: number;
+    long_let?: { average?: number; range?: [number, number] };
+    points_analysed?: number;
+  };
+  status?: string;
+};
+
+export async function fetchLocalRents(q: {
+  postcode: string;
+  bedrooms?: number;
+  type?: string;
+}): Promise<RentsResponse> {
+  const apiKey = process.env.PROPERTYDATA_API_KEY;
+  if (!apiKey) throw new PropertyDataConfigError("PROPERTYDATA_API_KEY not set");
+
+  const params = new URLSearchParams({ key: apiKey, postcode: q.postcode });
+  if (q.bedrooms != null) params.set("bedrooms", String(q.bedrooms));
+  if (q.type) params.set("type", q.type);
+
+  const res = await fetch(`${BASE_URL}/rents?${params}`, {
+    headers: { Accept: "application/json" },
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new PropertyDataApiError(
+      `PropertyData /rents ${res.status}: ${body.slice(0, 200)}`,
+      res.status,
+    );
+  }
+  return (await res.json()) as RentsResponse;
+}
+
 export async function searchSourcedProperties(
   q: PropertyDataSearch,
 ): Promise<PropertyDataItem[]> {

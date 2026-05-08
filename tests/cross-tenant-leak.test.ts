@@ -94,6 +94,35 @@ describe("cross-tenant leak guard", () => {
     },
   );
 
+  // Viewings use parent-scoped lookups (rooms + photos query by
+  // viewingId, not user_id directly). The ownership check happens on
+  // the parent viewings row before any rooms/photos are touched. Pin
+  // that pattern so future edits can't drop the parent check.
+  it("viewings queries gate on user_id at the viewings level", () => {
+    const src = read("features/viewings/queries.ts");
+    expect(src).toMatch(/eq\(viewings\.userId, userId\)/);
+  });
+
+  it("viewings actions verify ownership before mutating rooms or photos", () => {
+    const src = read("features/viewings/actions.ts");
+    // Every public action (except createViewing which inserts under
+    // the caller's userId) re-verifies that the viewing belongs to
+    // the caller. Spot-check three of them.
+    for (const fn of ["addRoom", "updateRoom", "deleteRoom", "uploadPhoto", "deletePhoto", "deleteViewing", "updateViewingHeader"]) {
+      const start = src.indexOf(`function ${fn}`);
+      expect(start, `${fn} not found`).toBeGreaterThan(0);
+      const end = src.indexOf("\nexport ", start + 1);
+      const body = src.slice(start, end > 0 ? end : undefined);
+      expect(
+        body,
+        `${fn} must read userId from getUserIdOrNull and use it`,
+      ).toMatch(/getUserIdOrNull/);
+      expect(body, `${fn} must filter by userId or insert with userId`).toMatch(
+        /userId/,
+      );
+    }
+  });
+
   it("watchlist POST never reads existing rows by propertyId alone", () => {
     // The watchlist route had a bug where the "already on list" lookup
     // filtered only by propertyId, leaking another tenant's row. Pin the
