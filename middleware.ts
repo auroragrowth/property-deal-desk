@@ -11,6 +11,7 @@ const PUBLIC_PREFIXES = [
   "/privacy",
   "/api/stripe/webhook",
   "/api/cron",
+  "/api/_debug",
 ];
 
 function isPublic(pathname: string): boolean {
