@@ -8,6 +8,7 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard" },
+  { href: "/market", label: "Market" },
   { href: "/watchlist", label: "Watchlist" },
   { href: "/settings", label: "Settings" },
 ] as const;
