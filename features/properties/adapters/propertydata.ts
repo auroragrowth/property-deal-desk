@@ -67,6 +67,11 @@ export class PropertyDataApiError extends Error {
   }
 }
 
+// Per-result shape after merging across multiple strategy lists.
+export type SourcedHit = PropertyDataItem & {
+  matched_lists: string[];
+};
+
 export async function searchSourcedProperties(
   q: PropertyDataSearch,
 ): Promise<PropertyDataItem[]> {
@@ -111,6 +116,50 @@ export async function searchSourcedProperties(
 
   const json = (await res.json()) as Partial<PropertyDataResponse>;
   return json.data ?? [];
+}
+
+// Fan out one /sourced-properties call per strategy, dedupe by id, and
+// attach which strategies each property matched. Failures on one list
+// are surfaced via the per-list error map — they don't kill the others.
+//
+// 1 PropertyData credit per 10 results per list. Be sparing.
+export async function searchAcrossLists(
+  lists: string[],
+  q: Omit<PropertyDataSearch, "list">,
+): Promise<{
+  hits: SourcedHit[];
+  errorsByList: Record<string, string>;
+}> {
+  const settled = await Promise.allSettled(
+    lists.map(async (list) => ({
+      list,
+      items: await searchSourcedProperties({ ...q, list }),
+    })),
+  );
+
+  const byId = new Map<string, SourcedHit>();
+  const errorsByList: Record<string, string> = {};
+
+  for (let i = 0; i < settled.length; i++) {
+    const res = settled[i];
+    const list = lists[i];
+    if (res.status === "rejected") {
+      const e = res.reason as Error;
+      errorsByList[list] = e.message ?? String(e);
+      continue;
+    }
+    for (const item of res.value.items) {
+      const existing = byId.get(item.id);
+      if (existing) {
+        if (!existing.matched_lists.includes(list))
+          existing.matched_lists.push(list);
+      } else {
+        byId.set(item.id, { ...item, matched_lists: [list] });
+      }
+    }
+  }
+
+  return { hits: Array.from(byId.values()), errorsByList };
 }
 
 // Map PropertyData's standardised type to our NormalisedProperty.property_type.
