@@ -39,7 +39,16 @@ export default async function SignInPage({
 
       <AuthForm mode="signin" />
 
-      <p className="text-text-tertiary mt-8 text-center text-sm">
+      <p className="text-text-tertiary mt-6 text-center text-sm">
+        <Link
+          href="/forgot-password"
+          className="hover:text-text-primary underline underline-offset-2"
+        >
+          Forgot your password?
+        </Link>
+      </p>
+
+      <p className="text-text-tertiary mt-3 text-center text-sm">
         New here?{" "}
         <Link
           href="/sign-up"

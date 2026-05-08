@@ -5,6 +5,7 @@ const PUBLIC_PREFIXES = [
   "/",
   "/sign-in",
   "/sign-up",
+  "/forgot-password",
   "/auth/callback",
   "/terms",
   "/privacy",

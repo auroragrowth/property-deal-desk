@@ -99,3 +99,39 @@ export async function signOut(): Promise<void> {
   await supabase.auth.signOut();
   redirect("/");
 }
+
+export async function requestPasswordReset(
+  _prev: AuthActionResult | null,
+  formData: FormData,
+): Promise<AuthActionResult> {
+  const email = String(formData.get("email") ?? "").trim();
+  if (!email) return { error: "Email required." };
+
+  const supabase = await getSupabaseServerClient();
+  const origin = await siteUrl();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${origin}/auth/callback?next=/reset-password`,
+  });
+  if (error) return { error: error.message };
+
+  return {
+    ok: true,
+    message:
+      "If an account exists for that email, a reset link is on its way.",
+  };
+}
+
+export async function updatePassword(
+  _prev: AuthActionResult | null,
+  formData: FormData,
+): Promise<AuthActionResult> {
+  const password = String(formData.get("password") ?? "");
+  if (password.length < 8)
+    return { error: "Password must be at least 8 characters." };
+
+  const supabase = await getSupabaseServerClient();
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) return { error: error.message };
+
+  redirect("/dashboard");
+}
