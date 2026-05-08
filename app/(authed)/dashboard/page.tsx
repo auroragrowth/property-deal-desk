@@ -65,11 +65,26 @@ export default async function DashboardPage({
     status: sp.status === "all" ? "all" : "active",
   };
 
+  // Render gracefully even when the DB is unreachable — useful for
+  // AUTH_BYPASS demo deploys, and never want a 500 page on the
+  // dashboard for a transient connection blip.
   const [recent, watched, savedFilters, onboarding] = await Promise.all([
-    searchProperties(filter),
-    watchlistMap(userId),
-    listSavedFilters(userId),
-    getOnboardingProgress(userId),
+    searchProperties(filter).catch((err: Error) => {
+      console.error("[dashboard] searchProperties failed:", err.message);
+      return [];
+    }),
+    watchlistMap(userId).catch((err: Error) => {
+      console.error("[dashboard] watchlistMap failed:", err.message);
+      return new Map<string, string>();
+    }),
+    listSavedFilters(userId).catch((err: Error) => {
+      console.error("[dashboard] listSavedFilters failed:", err.message);
+      return [];
+    }),
+    getOnboardingProgress(userId).catch((err: Error) => {
+      console.error("[dashboard] getOnboardingProgress failed:", err.message);
+      return { steps: [], doneCount: 0, total: 0 };
+    }),
   ]);
 
   return (

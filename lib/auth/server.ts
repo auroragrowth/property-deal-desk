@@ -12,7 +12,24 @@ export type AuthUser = {
   fullName: string | null;
 };
 
+// AUTH_BYPASS=true short-circuits auth entirely and returns a fixed
+// demo user. Used to demo / preview the app without requiring sign-in.
+// Writes that hit FK constraints to public.users will still fail
+// because this uuid isn't in auth.users — read-only flows are the
+// supported use case here.
+const BYPASS_USER: AuthUser = {
+  id: "00000000-0000-0000-0000-000000000001",
+  email: "demo@dealdesk.local",
+  fullName: "Demo",
+};
+
+export function authBypassEnabled(): boolean {
+  return process.env.AUTH_BYPASS === "true";
+}
+
 export async function getUser(): Promise<AuthUser | null> {
+  if (authBypassEnabled()) return BYPASS_USER;
+
   const supabase = await getSupabaseServerClient();
   const {
     data: { user },

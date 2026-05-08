@@ -15,7 +15,7 @@ export async function GET() {
   let user = "";
   let port = "";
   let dbname = "";
-  let urlLength = url.length;
+  const urlLength = url.length;
   try {
     const u = new URL(url);
     host = u.hostname;

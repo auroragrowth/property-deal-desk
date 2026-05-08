@@ -21,6 +21,12 @@ function isPublic(pathname: string): boolean {
 }
 
 export async function middleware(req: NextRequest) {
+  // AUTH_BYPASS short-circuits the gate — every route is reachable
+  // without sign-in. Used for demo / preview deploys.
+  if (process.env.AUTH_BYPASS === "true") {
+    return NextResponse.next();
+  }
+
   const { res, user } = await updateSession(req);
 
   if (!isPublic(req.nextUrl.pathname) && !user) {
