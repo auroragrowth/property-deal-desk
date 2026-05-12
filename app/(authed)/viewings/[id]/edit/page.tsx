@@ -13,6 +13,10 @@ import { DeleteViewingButton } from "@/features/viewings/delete-button";
 
 export const metadata = { title: "Capture viewing · DealDesk" };
 
+// Photos are served via short-lived signed URLs — re-render every
+// visit so they never go stale.
+export const dynamic = "force-dynamic";
+
 export default async function EditViewingPage({
   params,
 }: {

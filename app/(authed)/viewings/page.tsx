@@ -5,6 +5,9 @@ import { listViewings, signPhotoUrls } from "@/features/viewings/queries";
 
 export const metadata = { title: "Viewings · DealDesk" };
 
+// Thumbnails use signed URLs — re-render every visit so they stay fresh.
+export const dynamic = "force-dynamic";
+
 const fmtPrice = (pence: number | null) =>
   pence == null ? "—" : `£${(pence / 100).toLocaleString("en-GB")}`;
 

@@ -7,6 +7,10 @@ import {
 } from "@/features/viewings/queries";
 import { Comparables } from "@/features/viewings/comparables";
 
+// Photos are served via short-lived signed URLs — never cache the
+// rendered page, or stale URLs would 404 after expiry.
+export const dynamic = "force-dynamic";
+
 const fmtPrice = (pence: number | null) =>
   pence == null ? "—" : `£${(pence / 100).toLocaleString("en-GB")}`;
 

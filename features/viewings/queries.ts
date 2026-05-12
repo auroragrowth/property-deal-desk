@@ -161,8 +161,10 @@ export async function getViewing(
   };
 }
 
-// Generate signed URLs for a list of storage paths (5-minute lifetime).
-// Falls back to bucket public URL if signing fails (bucket may be public).
+// Generate signed URLs for a list of storage paths (1-hour lifetime).
+// Pages that show photos use force-dynamic so URLs are regenerated on
+// every visit — the 1 hour cushions long-session navigation. Errors
+// are logged so we can spot bucket / service-role config issues.
 export async function signPhotoUrls(
   paths: string[],
 ): Promise<Record<string, string>> {
@@ -171,14 +173,25 @@ export async function signPhotoUrls(
   try {
     admin = getSupabaseAdminClient();
   } catch (err) {
-    if (err instanceof SupabaseAdminMissingError) return {};
+    if (err instanceof SupabaseAdminMissingError) {
+      console.warn(
+        "[viewings] photos not visible: SUPABASE_SERVICE_ROLE_KEY missing",
+      );
+      return {};
+    }
     throw err;
   }
 
   const { data, error } = await admin.storage
     .from(VIEWING_PHOTOS_BUCKET)
-    .createSignedUrls(paths, 60 * 5);
-  if (error || !data) return {};
+    .createSignedUrls(paths, 60 * 60);
+  if (error || !data) {
+    console.error(
+      "[viewings] createSignedUrls failed",
+      error?.message ?? "no data",
+    );
+    return {};
+  }
 
   const out: Record<string, string> = {};
   for (const item of data) {
