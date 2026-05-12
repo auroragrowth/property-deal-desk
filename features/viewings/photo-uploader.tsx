@@ -69,7 +69,8 @@ export function PhotoUploader({
   viewingId: string;
   roomId: string | null;
 }) {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const libraryRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState<{ done: number; total: number } | null>(
     null,
   );
@@ -103,25 +104,40 @@ export function PhotoUploader({
     }
 
     setBusy(null);
-    if (inputRef.current) inputRef.current.value = "";
+    if (cameraRef.current) cameraRef.current.value = "";
+    if (libraryRef.current) libraryRef.current.value = "";
     startTransition(() => {});
   }
 
   return (
     <div className="space-y-2">
-      <label className="border-border-strong text-text-primary hover:bg-bg-surface-2 inline-flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-md border-[0.5px] bg-transparent px-4 text-sm font-medium">
-        <span aria-hidden>📷</span>
-        <span>Add photos</span>
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          multiple
-          className="sr-only"
-          onChange={(e) => onFiles(e.currentTarget.files)}
-        />
-      </label>
+      <div className="grid grid-cols-2 gap-2">
+        <label className="border-border-strong text-text-primary hover:bg-bg-surface-2 inline-flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-md border-[0.5px] bg-transparent px-3 text-sm font-medium">
+          <span aria-hidden>📷</span>
+          <span>Take photo</span>
+          <input
+            ref={cameraRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            multiple
+            className="sr-only"
+            onChange={(e) => onFiles(e.currentTarget.files)}
+          />
+        </label>
+        <label className="border-border-strong text-text-primary hover:bg-bg-surface-2 inline-flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-md border-[0.5px] bg-transparent px-3 text-sm font-medium">
+          <span aria-hidden>🖼️</span>
+          <span>Add from library</span>
+          <input
+            ref={libraryRef}
+            type="file"
+            accept="image/*"
+            multiple
+            className="sr-only"
+            onChange={(e) => onFiles(e.currentTarget.files)}
+          />
+        </label>
+      </div>
       {busy && (
         <p className="text-text-tertiary text-xs">
           Uploading {busy.done} / {busy.total}…
