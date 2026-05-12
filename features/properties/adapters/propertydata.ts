@@ -10,6 +10,16 @@ import type { NormalisedProperty } from "./_interface";
 
 const BASE_URL = "https://api.propertydata.co.uk";
 
+// PropertyData wants postcodes in standard UK format ("IP4 1AA").
+// We store them normalised (no space, uppercase) so we re-insert the
+// space three chars before the end. District-only postcodes ("IP4")
+// are passed through unchanged — the API accepts them too.
+function formatPostcodeForApi(pc: string): string {
+  const u = pc.replace(/\s+/g, "").toUpperCase();
+  if (u.length <= 4) return u;
+  return `${u.slice(0, -3)} ${u.slice(-3)}`;
+}
+
 export type PropertyDataSearch = {
   postcode?: string;
   // What3words alt to postcode.
@@ -101,7 +111,10 @@ export async function fetchSoldPrices(q: {
   const apiKey = process.env.PROPERTYDATA_API_KEY;
   if (!apiKey) throw new PropertyDataConfigError("PROPERTYDATA_API_KEY not set");
 
-  const params = new URLSearchParams({ key: apiKey, postcode: q.postcode });
+  const params = new URLSearchParams({
+    key: apiKey,
+    postcode: formatPostcodeForApi(q.postcode),
+  });
   if (q.bedrooms != null) params.set("bedrooms", String(q.bedrooms));
   if (q.type) params.set("type", q.type);
   if (q.maxAge != null) params.set("max_age", String(q.maxAge));
@@ -137,7 +150,10 @@ export async function fetchLocalRents(q: {
   const apiKey = process.env.PROPERTYDATA_API_KEY;
   if (!apiKey) throw new PropertyDataConfigError("PROPERTYDATA_API_KEY not set");
 
-  const params = new URLSearchParams({ key: apiKey, postcode: q.postcode });
+  const params = new URLSearchParams({
+    key: apiKey,
+    postcode: formatPostcodeForApi(q.postcode),
+  });
   if (q.bedrooms != null) params.set("bedrooms", String(q.bedrooms));
   if (q.type) params.set("type", q.type);
 
@@ -168,7 +184,7 @@ export async function searchSourcedProperties(
     );
 
   const params = new URLSearchParams({ key: apiKey, list });
-  if (q.postcode) params.set("postcode", q.postcode);
+  if (q.postcode) params.set("postcode", formatPostcodeForApi(q.postcode));
   if (q.w3w) params.set("w3w", q.w3w);
   if (q.location) params.set("location", q.location);
   if (q.radius != null) params.set("radius", String(q.radius));
