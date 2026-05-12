@@ -25,12 +25,14 @@ export function PropertyHeaderForm({
   initialPostcode,
   initialPricePence,
   initialBedrooms,
+  initialRentPcmPence,
 }: {
   viewingId: string;
   initialAddress: string | null;
   initialPostcode: string | null;
   initialPricePence: number | null;
   initialBedrooms: number | null;
+  initialRentPcmPence: number | null;
 }) {
   const [address, setAddress] = useState(initialAddress ?? "");
   const [postcode, setPostcode] = useState(initialPostcode ?? "");
@@ -41,6 +43,11 @@ export function PropertyHeaderForm({
   );
   const [bedrooms, setBedrooms] = useState(
     initialBedrooms != null ? String(initialBedrooms) : "",
+  );
+  const [rentPounds, setRentPounds] = useState(
+    initialRentPcmPence != null
+      ? String(Math.round(initialRentPcmPence / 100))
+      : "",
   );
 
   const saveAddress = useCallback(
@@ -77,6 +84,15 @@ export function PropertyHeaderForm({
     },
     [viewingId],
   );
+  const saveRent = useCallback(
+    async (value: string) => {
+      const n = parseInt(value.replace(/[^0-9]/g, ""), 10);
+      await updateViewingHeader(viewingId, {
+        propertyRentPcmPence: Number.isFinite(n) ? n * 100 : null,
+      });
+    },
+    [viewingId],
+  );
 
   const addressStatus = useDebouncedSave(
     address,
@@ -99,6 +115,13 @@ export function PropertyHeaderForm({
     bedrooms,
     initialBedrooms != null ? String(initialBedrooms) : "",
     saveBedrooms,
+  );
+  const rentStatus = useDebouncedSave(
+    rentPounds,
+    initialRentPcmPence != null
+      ? String(Math.round(initialRentPcmPence / 100))
+      : "",
+    saveRent,
   );
 
   return (
@@ -180,6 +203,26 @@ export function PropertyHeaderForm({
           />
         </label>
       </div>
+
+      <label className="block">
+        <span className="text-text-secondary mb-1 flex items-center justify-between text-xs">
+          <span>Expected rent £/month</span>
+          <StatusBadge status={rentStatus} />
+        </span>
+        <input
+          value={rentPounds}
+          onChange={(e) =>
+            setRentPounds(e.target.value.replace(/[^0-9]/g, ""))
+          }
+          placeholder="e.g. 850 — what the agent quoted on-site"
+          inputMode="numeric"
+          className="border-border bg-bg-page focus:ring-accent-soft h-11 w-full rounded-md border-[0.5px] px-3 text-base focus:ring-[3px] focus:outline-none"
+        />
+        <span className="text-text-tertiary mt-1 block text-[11px]">
+          Flows through to the deal analyser when you tap &ldquo;Run the
+          numbers&rdquo;.
+        </span>
+      </label>
     </section>
   );
 }

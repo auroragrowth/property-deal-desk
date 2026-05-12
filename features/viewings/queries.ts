@@ -33,6 +33,7 @@ export type ViewingDetail = {
   propertyPostcode: string | null;
   propertyPricePence: number | null;
   propertyBedrooms: number | null;
+  propertyRentPcmPence: number | null;
   overallNotes: string | null;
   visitedAt: Date | null;
   rooms: {
@@ -146,6 +147,7 @@ export async function getViewing(
     propertyPostcode: row.propertyPostcode,
     propertyPricePence: row.propertyPricePence,
     propertyBedrooms: row.propertyBedrooms,
+    propertyRentPcmPence: row.propertyRentPcmPence,
     overallNotes: row.overallNotes,
     visitedAt: row.visitedAt,
     rooms: rooms.map((r) => ({

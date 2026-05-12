@@ -68,6 +68,8 @@ export async function analyseFromViewing(
           postcode: viewing.propertyPostcode,
           listingPrice: viewing.propertyPricePence,
           listingStatus: "active",
+          bedrooms: viewing.propertyBedrooms,
+          estimatedMonthlyRent: viewing.propertyRentPcmPence,
         })
         .returning({ id: properties.id });
       propertyId = inserted.id;
@@ -78,6 +80,13 @@ export async function analyseFromViewing(
       .update(viewings)
       .set({ propertyId, updatedAt: new Date() })
       .where(eq(viewings.id, viewingId));
+  } else if (viewing.propertyRentPcmPence != null) {
+    // Property already exists — push the latest viewing rent through
+    // so the analyser uses the most recent estimate.
+    await db
+      .update(properties)
+      .set({ estimatedMonthlyRent: viewing.propertyRentPcmPence })
+      .where(eq(properties.id, propertyId));
   }
 
   // 3. Add to watchlist (idempotent).

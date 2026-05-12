@@ -64,6 +64,7 @@ export default async function EditViewingPage({
         initialPostcode={viewing.propertyPostcode}
         initialPricePence={viewing.propertyPricePence}
         initialBedrooms={viewing.propertyBedrooms}
+        initialRentPcmPence={viewing.propertyRentPcmPence}
       />
 
       <Comparables

@@ -52,6 +52,7 @@ export async function updateViewingHeader(
     propertyPostcode?: string | null;
     propertyPricePence?: number | null;
     propertyBedrooms?: number | null;
+    propertyRentPcmPence?: number | null;
     overallNotes?: string | null;
   },
 ): Promise<ActionResult> {
@@ -72,6 +73,8 @@ export async function updateViewingHeader(
     updateValues.propertyPricePence = patch.propertyPricePence;
   if (patch.propertyBedrooms !== undefined)
     updateValues.propertyBedrooms = patch.propertyBedrooms;
+  if (patch.propertyRentPcmPence !== undefined)
+    updateValues.propertyRentPcmPence = patch.propertyRentPcmPence;
   if (patch.overallNotes !== undefined)
     updateValues.overallNotes = patch.overallNotes;
 
