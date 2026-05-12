@@ -18,16 +18,35 @@ const portalLabel = (host: string) => {
 };
 
 type Outputs = {
-  cash_required?: number;
-  deposit?: number;
-  stamp_duty?: number;
+  // Headline (Mastering The Numbers)
+  gross_yield?: number;
+  net_yield?: number;
+  gross_roce?: number;
+  net_roce?: number;
+  money_left_in?: number;
+  all_money_out_offer?: number;
   monthly_cashflow?: number;
+  annual_cashflow?: number;
+  // Working breakdown
+  gdv?: number;
+  refinance_budget?: number;
+  total_in?: number;
+  stamp_duty?: number;
   monthly_mortgage?: number;
+  annual_mortgage?: number;
+  annual_agent?: number;
+  annual_insurance?: number;
+  annual_expenses?: number;
+  annual_voids?: number;
+  annual_maintenance?: number;
+  annual_running_costs?: number;
   monthly_rent?: number;
   rent_source?: "override" | "estimated" | "missing";
-  cash_on_cash_roi?: number;
-  gross_yield?: number;
   stress_2pct?: { rate: number; monthly_cashflow: number };
+  // Legacy (kept so old result rows still render)
+  cash_required?: number;
+  deposit?: number;
+  cash_on_cash_roi?: number;
 };
 
 const RENT_SOURCE_LABEL: Record<NonNullable<Outputs["rent_source"]>, string> = {
@@ -57,8 +76,13 @@ export default async function DealPage({
         rate_pct?: number;
         mgmt_pct?: number;
         void_pct?: number;
+        maintenance_pct?: number;
+        insurance_pcm?: number;
         refurb?: number;
         legal_fees?: number;
+        auction_fee?: number;
+        sourcing_fee?: number;
+        gdv_pence?: number | null;
         rent_pcm?: number | null;
       };
       criteria?: {
@@ -69,11 +93,16 @@ export default async function DealPage({
     };
   const formAssumptions = {
     deposit_pct: lastSnap.assumptions?.deposit_pct ?? 0.25,
-    rate_pct: lastSnap.assumptions?.rate_pct ?? 0.0549,
+    rate_pct: lastSnap.assumptions?.rate_pct ?? 0.05,
     mgmt_pct: lastSnap.assumptions?.mgmt_pct ?? 0.1,
     void_pct: lastSnap.assumptions?.void_pct ?? 0.05,
+    maintenance_pct: lastSnap.assumptions?.maintenance_pct ?? 0.05,
+    insurance_pcm_pence: lastSnap.assumptions?.insurance_pcm ?? 2000,
     refurb_pence: lastSnap.assumptions?.refurb ?? 0,
     legal_fees_pence: lastSnap.assumptions?.legal_fees ?? 200000,
+    auction_fee_pence: lastSnap.assumptions?.auction_fee ?? 0,
+    sourcing_fee_pence: lastSnap.assumptions?.sourcing_fee ?? 0,
+    gdv_pence: lastSnap.assumptions?.gdv_pence ?? null,
     rent_pcm_pence: lastSnap.assumptions?.rent_pcm ?? null,
   };
   const formCriteria = {
@@ -151,25 +180,35 @@ export default async function DealPage({
         </p>
       </section>
 
-      {/* KPI grid */}
+      {/* Mastering The Numbers — headline grid */}
       {result && (
-        <section className="mt-6 grid grid-cols-2 gap-3">
-          <Kpi
-            label="Cash required"
-            value={fmtPenceShort(o.cash_required ?? 0)}
-          />
+        <section className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <Kpi label="Gross yield" value={fmtPercent(o.gross_yield ?? 0)} />
+          <Kpi label="Net yield" value={fmtPercent(o.net_yield ?? 0)} />
           <Kpi
             label="Monthly cashflow"
             value={fmtPenceShort(o.monthly_cashflow ?? 0)}
-            tone={
-              (o.monthly_cashflow ?? 0) >= 0 ? "pass" : "fail"
-            }
+            tone={(o.monthly_cashflow ?? 0) >= 0 ? "pass" : "fail"}
+          />
+          <Kpi label="Gross ROCE" value={fmtPercent(o.gross_roce ?? 0)} />
+          <Kpi label="Net ROCE" value={fmtPercent(o.net_roce ?? 0)} />
+          <Kpi
+            label="Money left in"
+            value={fmtPenceShort(o.money_left_in ?? 0)}
+            tone={(o.money_left_in ?? 0) === 0 ? "pass" : "neutral"}
           />
           <Kpi
-            label="Cash-on-cash ROI"
-            value={fmtPercent(o.cash_on_cash_roi ?? 0)}
+            label="All-money-out offer"
+            value={fmtPenceShort(o.all_money_out_offer ?? 0)}
           />
-          <Kpi label="Gross yield" value={fmtPercent(o.gross_yield ?? 0)} />
+          <Kpi
+            label="Stamp duty (BTL)"
+            value={fmtPenceShort(o.stamp_duty ?? 0)}
+          />
+          <Kpi
+            label="Refinance budget (GDV × 75%)"
+            value={fmtPenceShort(o.refinance_budget ?? 0)}
+          />
         </section>
       )}
 
@@ -232,17 +271,41 @@ export default async function DealPage({
           <p className="text-text-secondary mb-3 font-mono text-[11px] tracking-[0.12em] uppercase">
             How we got there
           </p>
-          <dl className="text-text-primary divide-border-strong/40 grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
-            <Row label="Deposit" value={fmtPenceShort(o.deposit ?? 0)} />
-            <Row label="Stamp duty (BTL)" value={fmtPenceShort(o.stamp_duty ?? 0)} />
+          <dl className="text-text-primary grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
             <Row
               label="Monthly rent"
               value={`${fmtPenceShort(o.monthly_rent ?? 0)}/mo${o.rent_source ? ` · ${RENT_SOURCE_LABEL[o.rent_source]}` : ""}`}
             />
             <Row
-              label="Monthly mortgage"
+              label="Monthly mortgage (IO)"
               value={`${fmtPenceShort(o.monthly_mortgage ?? 0)}/mo`}
             />
+            <Row
+              label="Annual agent fee"
+              value={fmtPenceShort(o.annual_agent ?? 0)}
+            />
+            <Row
+              label="Annual insurance"
+              value={fmtPenceShort(o.annual_insurance ?? 0)}
+            />
+            <Row
+              label="Annual expenses (net yield)"
+              value={fmtPenceShort(o.annual_expenses ?? 0)}
+            />
+            <Row
+              label="Annual voids"
+              value={fmtPenceShort(o.annual_voids ?? 0)}
+            />
+            <Row
+              label="Annual maintenance"
+              value={fmtPenceShort(o.annual_maintenance ?? 0)}
+            />
+            <Row
+              label="Annual running costs (cashflow)"
+              value={fmtPenceShort(o.annual_running_costs ?? 0)}
+            />
+            <Row label="GDV" value={fmtPenceShort(o.gdv ?? 0)} />
+            <Row label="Total in" value={fmtPenceShort(o.total_in ?? 0)} />
           </dl>
         </section>
       )}
@@ -294,7 +357,7 @@ function HistoryRow({ run }: { run: DealResultView }) {
       </span>
       <span className="text-text-primary">
         {fmtPenceShort(o.monthly_cashflow ?? 0)}/mo ·{" "}
-        {fmtPercent(o.cash_on_cash_roi ?? 0)} ROI
+        {fmtPercent(o.net_roce ?? o.cash_on_cash_roi ?? 0)} Net ROCE
       </span>
       <span
         className={[

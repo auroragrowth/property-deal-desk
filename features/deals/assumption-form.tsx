@@ -5,11 +5,16 @@ import { useRouter } from "next/navigation";
 
 type AssumptionDefaults = {
   deposit_pct: number; // decimal e.g. 0.25
-  rate_pct: number; // decimal e.g. 0.0549
-  mgmt_pct: number;
+  rate_pct: number; // decimal e.g. 0.05
+  mgmt_pct: number; // agent %
   void_pct: number;
+  maintenance_pct: number;
+  insurance_pcm_pence: number;
   refurb_pence: number;
   legal_fees_pence: number;
+  auction_fee_pence: number;
+  sourcing_fee_pence: number;
+  gdv_pence: number | null;
   rent_pcm_pence: number | null;
 };
 
@@ -38,8 +43,6 @@ export function AssumptionForm({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Form values held as strings so empty input is preserved cleanly. Display
-  // units (%, £) — convert to engine units (decimal, pence) on submit.
   const [depositPctPct, setDepositPctPct] = useState(
     String(round(assumptions.deposit_pct * 100, 1)),
   );
@@ -52,11 +55,28 @@ export function AssumptionForm({
   const [voidPctPct, setVoidPctPct] = useState(
     String(round(assumptions.void_pct * 100, 1)),
   );
+  const [maintPctPct, setMaintPctPct] = useState(
+    String(round(assumptions.maintenance_pct * 100, 1)),
+  );
+  const [insuranceGbp, setInsuranceGbp] = useState(
+    String(Math.round(assumptions.insurance_pcm_pence / 100)),
+  );
   const [refurbGbp, setRefurbGbp] = useState(
     String(Math.round(assumptions.refurb_pence / 100)),
   );
   const [legalGbp, setLegalGbp] = useState(
     String(Math.round(assumptions.legal_fees_pence / 100)),
+  );
+  const [auctionGbp, setAuctionGbp] = useState(
+    String(Math.round(assumptions.auction_fee_pence / 100)),
+  );
+  const [sourcingGbp, setSourcingGbp] = useState(
+    String(Math.round(assumptions.sourcing_fee_pence / 100)),
+  );
+  const [gdvGbp, setGdvGbp] = useState(
+    assumptions.gdv_pence === null
+      ? ""
+      : String(Math.round(assumptions.gdv_pence / 100)),
   );
   const [rentGbp, setRentGbp] = useState(
     assumptions.rent_pcm_pence === null
@@ -85,8 +105,13 @@ export function AssumptionForm({
           rate_pct: parsePct(ratePctPct),
           mgmt_pct: parsePct(mgmtPctPct),
           void_pct: parsePct(voidPctPct),
+          maintenance_pct: parsePct(maintPctPct),
+          insurance_pcm: parsePence(insuranceGbp),
           refurb: parsePence(refurbGbp),
           legal_fees: parsePence(legalGbp),
+          auction_fee: parsePence(auctionGbp),
+          sourcing_fee: parsePence(sourcingGbp),
+          gdv_pence: gdvGbp.trim() === "" ? null : parsePence(gdvGbp),
           rent_pcm: rentGbp.trim() === "" ? null : parsePence(rentGbp),
         },
         criteria: {
@@ -129,6 +154,9 @@ export function AssumptionForm({
         Assumptions
       </summary>
       <form onSubmit={submit} className="border-border border-t-[0.5px] p-5">
+        <p className="text-text-tertiary mb-3 font-mono text-[10px] tracking-[0.12em] uppercase">
+          Mortgage shape (interest-only)
+        </p>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Deposit %" suffix="%">
             <input
@@ -154,7 +182,13 @@ export function AssumptionForm({
               className={fieldClass}
             />
           </Field>
-          <Field label="Management %" suffix="%">
+        </div>
+
+        <p className="text-text-tertiary mt-6 mb-3 font-mono text-[10px] tracking-[0.12em] uppercase">
+          Expenses (drive Net Yield)
+        </p>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Field label="Agent %" suffix="%">
             <input
               type="number"
               inputMode="decimal"
@@ -166,7 +200,36 @@ export function AssumptionForm({
               className={fieldClass}
             />
           </Field>
-          <Field label="Void allowance %" suffix="%">
+          <Field label="Insurance £/mo">
+            <input
+              type="number"
+              inputMode="numeric"
+              step={5}
+              min={0}
+              value={insuranceGbp}
+              onChange={(e) => setInsuranceGbp(e.target.value)}
+              className={fieldClass}
+            />
+          </Field>
+          <Field label="Rent £/month (override)">
+            <input
+              type="number"
+              inputMode="numeric"
+              step={25}
+              min={0}
+              placeholder="leave blank to use estimate"
+              value={rentGbp}
+              onChange={(e) => setRentGbp(e.target.value)}
+              className={fieldClass}
+            />
+          </Field>
+        </div>
+
+        <p className="text-text-tertiary mt-6 mb-3 font-mono text-[10px] tracking-[0.12em] uppercase">
+          Running costs (drive Cashflow)
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Voids %" suffix="%">
             <input
               type="number"
               inputMode="decimal"
@@ -175,6 +238,36 @@ export function AssumptionForm({
               max={50}
               value={voidPctPct}
               onChange={(e) => setVoidPctPct(e.target.value)}
+              className={fieldClass}
+            />
+          </Field>
+          <Field label="Maintenance %" suffix="%">
+            <input
+              type="number"
+              inputMode="decimal"
+              step="0.5"
+              min={0}
+              max={50}
+              value={maintPctPct}
+              onChange={(e) => setMaintPctPct(e.target.value)}
+              className={fieldClass}
+            />
+          </Field>
+        </div>
+
+        <p className="text-text-tertiary mt-6 mb-3 font-mono text-[10px] tracking-[0.12em] uppercase">
+          Money out (drives ROCE + Money Left In)
+        </p>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Field label="GDV £ (after refurb)">
+            <input
+              type="number"
+              inputMode="numeric"
+              step={1000}
+              min={0}
+              placeholder="defaults to listing price"
+              value={gdvGbp}
+              onChange={(e) => setGdvGbp(e.target.value)}
               className={fieldClass}
             />
           </Field>
@@ -200,21 +293,31 @@ export function AssumptionForm({
               className={fieldClass}
             />
           </Field>
-          <Field label="Rent £/month (override)">
+          <Field label="Auction fee £">
             <input
               type="number"
               inputMode="numeric"
-              step={25}
+              step={100}
               min={0}
-              placeholder="leave blank to use estimate"
-              value={rentGbp}
-              onChange={(e) => setRentGbp(e.target.value)}
+              value={auctionGbp}
+              onChange={(e) => setAuctionGbp(e.target.value)}
+              className={fieldClass}
+            />
+          </Field>
+          <Field label="Sourcing fee £">
+            <input
+              type="number"
+              inputMode="numeric"
+              step={100}
+              min={0}
+              value={sourcingGbp}
+              onChange={(e) => setSourcingGbp(e.target.value)}
               className={fieldClass}
             />
           </Field>
         </div>
 
-        <p className="text-text-tertiary mt-6 mb-2 font-mono text-[11px] tracking-[0.12em] uppercase">
+        <p className="text-text-tertiary mt-6 mb-3 font-mono text-[10px] tracking-[0.12em] uppercase">
           Pass criteria
         </p>
         <div className="grid gap-4 sm:grid-cols-3">
@@ -229,7 +332,7 @@ export function AssumptionForm({
               className={fieldClass}
             />
           </Field>
-          <Field label="Min ROI %" suffix="%">
+          <Field label="Min Net ROCE %" suffix="%">
             <input
               type="number"
               inputMode="decimal"
@@ -241,7 +344,7 @@ export function AssumptionForm({
               className={fieldClass}
             />
           </Field>
-          <Field label="Max cash £">
+          <Field label="Max money left in £">
             <input
               type="number"
               inputMode="numeric"
@@ -281,8 +384,6 @@ function Field({
   suffix?: string;
   children: React.ReactNode;
 }) {
-  // Wrap so the label is implicitly associated with the input — no
-  // htmlFor/id pair needed, and screen readers + Lighthouse are happy.
   return (
     <label className="block">
       <span className={labelClass}>{label}</span>

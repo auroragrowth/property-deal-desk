@@ -3,10 +3,8 @@
 
 /**
  * Standard repayment-mortgage monthly payment in pence.
- * M = P · r / (1 − (1 + r)^(−n))   where r is monthly rate, n is months.
- *
- * Note: real BTL mortgages are usually interest-only. The brief's calc
- * uses repayment for a more conservative analysis; we follow the brief.
+ * Kept for backwards compatibility — the BTL engine now uses
+ * `interestOnlyMonthly` per the Mastering The Numbers rules.
  */
 export function calcMortgagePayment(
   principalPence: number,
@@ -19,6 +17,23 @@ export function calcMortgagePayment(
   if (monthlyRate === 0) return Math.round(principalPence / months);
   const factor = Math.pow(1 + monthlyRate, -months);
   return Math.round((principalPence * monthlyRate) / (1 - factor));
+}
+
+/**
+ * Interest-only monthly mortgage payment in pence.
+ *
+ * Mastering The Numbers — Expenses slide:
+ *   monthly = Purchase Price × LTV × annual_rate / 12
+ *
+ * e.g. £180,000 × 75% × 5% / 12 = £562.50/month.
+ */
+export function interestOnlyMonthly(
+  pricePence: number,
+  ltv: number,
+  annualRate: number,
+): number {
+  if (pricePence <= 0 || ltv <= 0 || annualRate <= 0) return 0;
+  return Math.round((pricePence * ltv * annualRate) / 12);
 }
 
 /**

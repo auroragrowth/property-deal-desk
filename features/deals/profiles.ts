@@ -39,11 +39,16 @@ export function toAssumption(
 ): AssumptionProfile {
   return {
     deposit_pct: num(row.depositPct, 0.25),
-    rate_pct: num(row.ratePct, 0.0549),
+    rate_pct: num(row.ratePct, 0.05),
     mgmt_pct: num(row.mgmtPct, 0.1),
     void_pct: num(row.voidPct, 0.05),
+    maintenance_pct: num(row.maintenancePct, 0.05),
+    insurance_pcm: row.insurancePcm ?? 2000,
     refurb: row.refurb ?? 0,
     legal_fees: row.legalFees ?? 200000,
+    auction_fee: row.auctionFee ?? 0,
+    sourcing_fee: row.sourcingFee ?? 0,
+    gdv_pence: row.gdvPence ?? undefined,
     rent_pcm: row.rentPcmOverride ?? undefined,
   };
 }

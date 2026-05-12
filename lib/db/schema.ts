@@ -154,14 +154,23 @@ export const assumptionProfiles = pgTable("assumption_profiles", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   name: text("name").notNull().default("Default"),
+  // Canonical defaults from "Mastering The Numbers":
+  //   deposit 25%, rate 5%, agent 10%, voids 5%, maintenance 5%.
   depositPct: numeric("deposit_pct", { precision: 5, scale: 4 }).default(
     "0.25",
   ),
-  ratePct: numeric("rate_pct", { precision: 5, scale: 4 }).default("0.0549"),
+  ratePct: numeric("rate_pct", { precision: 5, scale: 4 }).default("0.05"),
   mgmtPct: numeric("mgmt_pct", { precision: 5, scale: 4 }).default("0.10"),
   voidPct: numeric("void_pct", { precision: 5, scale: 4 }).default("0.05"),
+  maintenancePct: numeric("maintenance_pct", { precision: 5, scale: 4 }).default(
+    "0.05",
+  ),
+  insurancePcm: integer("insurance_pcm").default(2000), // £20/mo
   refurb: integer("refurb").default(0),
-  legalFees: integer("legal_fees").default(200000),
+  legalFees: integer("legal_fees").default(200000), // £2,000
+  auctionFee: integer("auction_fee").default(0),
+  sourcingFee: integer("sourcing_fee").default(0),
+  gdvPence: integer("gdv_pence"),
   rentPcmOverride: integer("rent_pcm_override"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });

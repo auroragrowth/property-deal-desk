@@ -1,8 +1,8 @@
 import {
-  calcMortgagePayment,
   estimateStampDuty,
   fmtPenceShort,
   fmtPercent,
+  interestOnlyMonthly,
 } from "@/lib/btl/calc";
 import type {
   AssumptionProfile,
@@ -12,11 +12,30 @@ import type {
   StrategyEngine,
 } from "./_interface";
 
-const TERM_YEARS = 25;
+// ─── BTL engine v2 ──────────────────────────────────────────────────
+//
+// Implementation of "Mastering The Numbers" verbatim:
+//
+//   Gross yield        = annual_rent / purchase × 100
+//   Net yield          = (annual_rent − annual_expenses) / purchase × 100
+//   Gross ROCE         = annual_rent / money_left_in × 100
+//   Net ROCE           = (annual_rent − annual_expenses) / money_left_in × 100
+//   Money left in      = total_costs − (GDV × 0.75)
+//   All-money-out off. = (GDV × 0.75) − refurb − stamp − legals − fees
+//   Net cashflow       = monthly_rent − monthly_running_costs
+//
+//   Monthly mortgage   = price × ltv × rate / 12   (interest-only)
+//   Annual agent fee   = rent_pcm × 12 × mgmt_pct  (canonical 10%)
+//   Annual insurance   = insurance_pcm × 12
+//
+// "Expenses" (net yield)        = mortgage + agent + insurance
+// "Running costs" (cashflow)    = expenses + voids + maintenance
+//
+// +2% stress test (brief §13) is preserved on the interest-only model.
 
 export const btlEngine: StrategyEngine = {
   id: "btl",
-  version: "btl-v1",
+  version: "btl-v2",
 
   run(
     property: EngineProperty,
@@ -24,18 +43,9 @@ export const btlEngine: StrategyEngine = {
     criteria: CriteriaProfile,
   ): EngineRunResult {
     const price = property.listing_price;
+    const ltv = 1 - assumptions.deposit_pct;
 
-    const depositPence = price * assumptions.deposit_pct;
-    const principalPence = price - depositPence;
-
-    const monthlyMortgage = calcMortgagePayment(
-      principalPence,
-      assumptions.rate_pct,
-      TERM_YEARS,
-    );
-    const annualMortgage = monthlyMortgage * 12;
-
-    // Rent: explicit override beats stored estimate; both are pence-per-month.
+    // ── Inputs ──────────────────────────────────────────────────
     const monthlyRent =
       assumptions.rent_pcm ?? property.estimated_monthly_rent ?? 0;
     const rentSource: "override" | "estimated" | "missing" =
@@ -44,34 +54,77 @@ export const btlEngine: StrategyEngine = {
         : property.estimated_monthly_rent && property.estimated_monthly_rent > 0
           ? "estimated"
           : "missing";
-    const grossRent = monthlyRent * 12;
+    const annualRent = monthlyRent * 12;
 
-    const mgmtCost = grossRent * assumptions.mgmt_pct;
-    const voidCost = grossRent * assumptions.void_pct;
-
-    const annualCashflow = grossRent - mgmtCost - voidCost - annualMortgage;
-    const monthlyCashflow = annualCashflow / 12;
-
+    const gdv = assumptions.gdv_pence ?? price;
+    const refinanceBudget = Math.round(gdv * 0.75); // GDV × 75%
     const stampDuty = estimateStampDuty(price);
-    const cashRequired =
-      depositPence +
-      stampDuty +
+    const totalFees =
       assumptions.refurb +
-      assumptions.legal_fees;
+      stampDuty +
+      assumptions.legal_fees +
+      assumptions.auction_fee +
+      assumptions.sourcing_fee;
+    const totalIn = price + totalFees; // every quid spent acquiring + improving
 
-    const roi = cashRequired > 0 ? annualCashflow / cashRequired : 0;
-    const grossYield = price > 0 ? grossRent / price : 0;
+    // Money left in = total spend − refinance amount (≥ 0)
+    const moneyLeftIn = Math.max(0, totalIn - refinanceBudget);
 
-    // +2% stress test
-    const stressRate = assumptions.rate_pct + 0.02;
-    const stressMortgage = calcMortgagePayment(
-      principalPence,
-      stressRate,
-      TERM_YEARS,
+    // All-money-out offer = refinance budget − refurb − stamp − legals − fees.
+    // Computed using stamp on the user's input purchase-price; if they
+    // offer lower the stamp drops, so this is a conservative target.
+    const allMoneyOutOffer = Math.round(
+      refinanceBudget -
+        assumptions.refurb -
+        stampDuty -
+        assumptions.legal_fees -
+        assumptions.auction_fee -
+        assumptions.sourcing_fee,
     );
-    const stressMonthlyCashflow =
-      (grossRent - mgmtCost - voidCost - stressMortgage * 12) / 12;
 
+    // ── Expenses (Net Yield) ────────────────────────────────────
+    const monthlyMortgage = interestOnlyMonthly(
+      price,
+      ltv,
+      assumptions.rate_pct,
+    );
+    const annualMortgage = monthlyMortgage * 12;
+    const annualAgent = Math.round(annualRent * assumptions.mgmt_pct);
+    const annualInsurance = assumptions.insurance_pcm * 12;
+    const annualExpenses = annualMortgage + annualAgent + annualInsurance;
+
+    // ── Running costs (Net Cashflow) ────────────────────────────
+    const annualVoids = Math.round(annualRent * assumptions.void_pct);
+    const annualMaintenance = Math.round(
+      annualRent * assumptions.maintenance_pct,
+    );
+    const annualRunningCosts =
+      annualExpenses + annualVoids + annualMaintenance;
+    const annualCashflow = annualRent - annualRunningCosts;
+    const monthlyCashflow = Math.round(annualCashflow / 12);
+
+    // ── Headline metrics ────────────────────────────────────────
+    const grossYield = price > 0 ? annualRent / price : 0;
+    const netYield = price > 0 ? (annualRent - annualExpenses) / price : 0;
+    const grossRoce = moneyLeftIn > 0 ? annualRent / moneyLeftIn : 0;
+    const netRoce =
+      moneyLeftIn > 0 ? (annualRent - annualExpenses) / moneyLeftIn : 0;
+
+    // ── +2% stress test ─────────────────────────────────────────
+    const stressRate = assumptions.rate_pct + 0.02;
+    const stressMortgage = interestOnlyMonthly(price, ltv, stressRate);
+    const stressAnnualMortgage = stressMortgage * 12;
+    const stressAnnualRunning =
+      stressAnnualMortgage +
+      annualAgent +
+      annualInsurance +
+      annualVoids +
+      annualMaintenance;
+    const stressMonthlyCashflow = Math.round(
+      (annualRent - stressAnnualRunning) / 12,
+    );
+
+    // ── Pass / fail ─────────────────────────────────────────────
     const passReasons: string[] = [];
     const failReasons: string[] = [];
 
@@ -90,13 +143,13 @@ export const btlEngine: StrategyEngine = {
         );
       }
 
-      if (roi >= criteria.min_roi) {
+      if (netRoce >= criteria.min_roi) {
         passReasons.push(
-          `Cash-on-cash ROI ${fmtPercent(roi)} meets minimum ${fmtPercent(criteria.min_roi)}`,
+          `Net ROCE ${fmtPercent(netRoce)} meets minimum ${fmtPercent(criteria.min_roi)}`,
         );
       } else {
         failReasons.push(
-          `Cash-on-cash ROI ${fmtPercent(roi)} below minimum ${fmtPercent(criteria.min_roi)}`,
+          `Net ROCE ${fmtPercent(netRoce)} below minimum ${fmtPercent(criteria.min_roi)}`,
         );
       }
 
@@ -111,32 +164,47 @@ export const btlEngine: StrategyEngine = {
       }
     }
 
-    if (cashRequired <= criteria.max_cash_required) {
+    if (moneyLeftIn <= criteria.max_cash_required) {
       passReasons.push(
-        `Cash required ${fmtPenceShort(cashRequired)} within budget ${fmtPenceShort(criteria.max_cash_required)}`,
+        `Money left in ${fmtPenceShort(moneyLeftIn)} within budget ${fmtPenceShort(criteria.max_cash_required)}`,
       );
     } else {
       failReasons.push(
-        `Cash required ${fmtPenceShort(cashRequired)} exceeds budget ${fmtPenceShort(criteria.max_cash_required)}`,
+        `Money left in ${fmtPenceShort(moneyLeftIn)} exceeds budget ${fmtPenceShort(criteria.max_cash_required)}`,
       );
     }
 
     return {
-      engine_version: "btl-v1",
+      engine_version: "btl-v2",
       outputs: {
-        cash_required: Math.round(cashRequired),
-        deposit: Math.round(depositPence),
-        stamp_duty: Math.round(stampDuty),
-        annual_cashflow: Math.round(annualCashflow),
-        monthly_cashflow: Math.round(monthlyCashflow),
-        cash_on_cash_roi: roi,
+        // Mastering The Numbers headline metrics
         gross_yield: grossYield,
+        net_yield: netYield,
+        gross_roce: grossRoce,
+        net_roce: netRoce,
+        money_left_in: moneyLeftIn,
+        all_money_out_offer: allMoneyOutOffer,
+        monthly_cashflow: monthlyCashflow,
+        annual_cashflow: annualCashflow,
+        // Working — exposed so the deal page can show the breakdown
+        gdv,
+        refinance_budget: refinanceBudget,
+        purchase_price: price,
+        total_in: totalIn,
+        stamp_duty: stampDuty,
+        monthly_mortgage: monthlyMortgage,
+        annual_mortgage: annualMortgage,
+        annual_agent: annualAgent,
+        annual_insurance: annualInsurance,
+        annual_expenses: annualExpenses,
+        annual_voids: annualVoids,
+        annual_maintenance: annualMaintenance,
+        annual_running_costs: annualRunningCosts,
         monthly_rent: monthlyRent,
         rent_source: rentSource,
-        monthly_mortgage: Math.round(monthlyMortgage),
         stress_2pct: {
           rate: stressRate,
-          monthly_cashflow: Math.round(stressMonthlyCashflow),
+          monthly_cashflow: stressMonthlyCashflow,
         },
       },
       pass: failReasons.length === 0,

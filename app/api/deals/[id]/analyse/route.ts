@@ -25,8 +25,14 @@ function pickAssumptionOverrides(
   if (isFiniteNumber(raw.rate_pct)) o.rate_pct = raw.rate_pct;
   if (isFiniteNumber(raw.mgmt_pct)) o.mgmt_pct = raw.mgmt_pct;
   if (isFiniteNumber(raw.void_pct)) o.void_pct = raw.void_pct;
+  if (isFiniteNumber(raw.maintenance_pct))
+    o.maintenance_pct = raw.maintenance_pct;
+  if (isFiniteNumber(raw.insurance_pcm)) o.insurance_pcm = raw.insurance_pcm;
   if (isFiniteNumber(raw.refurb)) o.refurb = raw.refurb;
   if (isFiniteNumber(raw.legal_fees)) o.legal_fees = raw.legal_fees;
+  if (isFiniteNumber(raw.auction_fee)) o.auction_fee = raw.auction_fee;
+  if (isFiniteNumber(raw.sourcing_fee)) o.sourcing_fee = raw.sourcing_fee;
+  if (isFiniteNumber(raw.gdv_pence)) o.gdv_pence = raw.gdv_pence;
   if (isFiniteNumber(raw.rent_pcm)) o.rent_pcm = raw.rent_pcm;
   return o;
 }
