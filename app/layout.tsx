@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Instrument_Serif, JetBrains_Mono } from "next/font/google";
 import { PostHogProvider } from "@/lib/analytics/client";
 import { CookieBanner } from "@/features/legal/cookie-banner";
+import { AccessibilityApplier } from "@/features/accessibility/applier";
 import "./globals.css";
 
 const geist = Geist({
@@ -37,6 +38,7 @@ export default function RootLayout({
       <body
         className={`${geist.variable} ${instrumentSerif.variable} ${jetbrainsMono.variable} antialiased`}
       >
+        <AccessibilityApplier />
         <PostHogProvider>{children}</PostHogProvider>
         <CookieBanner />
       </body>

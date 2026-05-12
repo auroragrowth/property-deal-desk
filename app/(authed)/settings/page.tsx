@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { subscriptions } from "@/lib/db/schema";
 import { ManageBillingButton } from "@/features/billing/manage-billing-button";
+import { AccessibilitySettingsForm } from "@/features/accessibility/settings-form";
 
 export default async function SettingsPage() {
   const user = await getUser();
@@ -92,6 +93,8 @@ export default async function SettingsPage() {
           </div>
         )}
       </section>
+
+      <AccessibilitySettingsForm />
 
       <p className="text-text-tertiary text-sm">
         Email change, password change, 2FA toggle, and account deletion ship by

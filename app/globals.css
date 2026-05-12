@@ -86,6 +86,27 @@
   --info-border: #4a6580;
 }
 
+/* ───────── Accessibility prefs (set on <html> via JS) ──────────── */
+/* Font-size scaling. Tailwind's text-* utilities are rem-based, so   */
+/* bumping the html font-size scales every text utility proportionally.*/
+html[data-font="large"]  { font-size: 112.5%; }  /* 18 / 16 */
+html[data-font="xlarge"] { font-size: 125%; }    /* 20 / 16 */
+
+/* High-contrast: tighten muted text + border tokens.                  */
+html[data-contrast="high"] {
+  --text-secondary: #2a1f10;
+  --text-tertiary:  #3a2f1f;
+  --border-default: #8a7350;
+  --border-strong:  #6f5a3c;
+}
+html[data-contrast="high"].dark,
+html.dark[data-contrast="high"] {
+  --text-secondary: rgba(244, 236, 216, 0.95);
+  --text-tertiary:  rgba(244, 236, 216, 0.80);
+  --border-default: rgba(244, 236, 216, 0.30);
+  --border-strong:  rgba(244, 236, 216, 0.45);
+}
+
 /* ───────── Tailwind v4 theme — bridge tokens to utilities ───────── */
 @theme inline {
   /* Backgrounds */
