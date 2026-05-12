@@ -43,6 +43,13 @@
       "when": 1778600000000,
       "tag": "0005_deal_engine_v2",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1778700000000,
+      "tag": "0006_viewing_bedrooms",
+      "breakpoints": true
     }
   ]
 }

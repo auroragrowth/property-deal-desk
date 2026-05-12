@@ -88,7 +88,7 @@ export default async function ViewingDetailPage({
 
       <Comparables
         postcode={viewing.propertyPostcode}
-        bedrooms={null}
+        bedrooms={viewing.propertyBedrooms}
       />
 
       {viewing.overallNotes && (

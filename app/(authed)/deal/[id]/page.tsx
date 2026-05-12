@@ -4,6 +4,7 @@ import { getUserIdOrNull } from "@/lib/auth/server";
 import { getDealView, type DealResultView } from "@/features/deals/queries";
 import { fmtPenceShort, fmtPercent } from "@/lib/btl/calc";
 import { AssumptionForm } from "@/features/deals/assumption-form";
+import { computeMaxOfferForCriteria } from "@/features/deals/max-offer";
 
 const formatPostcode = (pc: string) => {
   if (pc.length <= 4) return pc;
@@ -111,6 +112,47 @@ export default async function DealPage({
     max_cash_required_pence: lastSnap.criteria?.max_cash_required ?? 5000000,
   };
 
+  // Backward-engineered offer: highest price ≤ listing that still
+  // passes the current criteria (min cashflow, min Net ROCE,
+  // max money-left-in, +2% stress).
+  // Use the last run's rent (override > engine fallback) so the
+  // backward-search agrees with the on-screen verdict.
+  const lastRunRent =
+    (result?.outputs as { monthly_rent?: number } | undefined)?.monthly_rent ??
+    null;
+  const maxOfferForCriteria = result
+    ? computeMaxOfferForCriteria(
+        property.listingPrice ?? 0,
+        {
+          id: property.id,
+          listing_price: property.listingPrice ?? 0,
+          estimated_monthly_rent: lastRunRent,
+          postcode: property.postcode,
+          bedrooms: property.bedrooms ?? 0,
+          property_type: property.propertyType ?? "other",
+        },
+        {
+          deposit_pct: formAssumptions.deposit_pct,
+          rate_pct: formAssumptions.rate_pct,
+          mgmt_pct: formAssumptions.mgmt_pct,
+          void_pct: formAssumptions.void_pct,
+          maintenance_pct: formAssumptions.maintenance_pct,
+          insurance_pcm: formAssumptions.insurance_pcm_pence,
+          refurb: formAssumptions.refurb_pence,
+          legal_fees: formAssumptions.legal_fees_pence,
+          auction_fee: formAssumptions.auction_fee_pence,
+          sourcing_fee: formAssumptions.sourcing_fee_pence,
+          gdv_pence: formAssumptions.gdv_pence ?? undefined,
+          rent_pcm: formAssumptions.rent_pcm_pence ?? undefined,
+        },
+        {
+          min_cashflow: formCriteria.min_cashflow_pence,
+          min_roi: formCriteria.min_roi_pct,
+          max_cash_required: formCriteria.max_cash_required_pence,
+        },
+      )
+    : 0;
+
   let host = "";
   try {
     host = property.sourceUrl
@@ -200,6 +242,15 @@ export default async function DealPage({
           <Kpi
             label="All-money-out offer"
             value={fmtPenceShort(o.all_money_out_offer ?? 0)}
+          />
+          <Kpi
+            label="Max offer for your criteria"
+            value={
+              maxOfferForCriteria > 0
+                ? fmtPenceShort(maxOfferForCriteria)
+                : "—"
+            }
+            tone={maxOfferForCriteria > 0 ? "pass" : "fail"}
           />
           <Kpi
             label="Stamp duty (BTL)"

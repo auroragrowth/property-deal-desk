@@ -53,6 +53,7 @@ export function UrlPaste({
           propertyAddress: data.address,
           propertyPostcode: data.postcode,
           propertyPricePence: data.pricePence,
+          propertyBedrooms: data.bedrooms,
         });
       });
     } catch (err) {

@@ -46,7 +46,7 @@ export const manualPasteAdapter: PropertyFeedAdapter = {
     const jsonLd = extractJsonLd(html);
     const og = extractOpenGraph(html);
 
-    const postcode = pickPostcode(jsonLd) ?? scanPostcode(html) ?? "";
+    const postcode = pickPostcode(jsonLd) ?? scanPostcode(html, og) ?? "";
     const address =
       pickAddress(jsonLd) ??
       pickAddressFromText(html, og, postcode) ??
@@ -156,6 +156,10 @@ function pickAddress(jsonLd: unknown[]): string | null {
 }
 
 function pickPostcode(jsonLd: unknown[]): string | null {
+  // Only trust the canonical schema.org address.postalCode — JSON-LD
+  // blocks often embed multiple addresses (breadcrumbs, agents, nearby
+  // results), and a naked regex on the stringified blob is too easy
+  // to mis-match.
   for (const item of jsonLd) {
     const obj = getRecord(item);
     if (!obj) continue;
@@ -163,14 +167,54 @@ function pickPostcode(jsonLd: unknown[]): string | null {
     if (a && typeof a.postalCode === "string" && a.postalCode.trim()) {
       return a.postalCode;
     }
-    const m = UK_POSTCODE_RE.exec(JSON.stringify(obj));
-    if (m) return m[1];
   }
   return null;
 }
 
-function scanPostcode(html: string): string | null {
-  const m = UK_POSTCODE_RE.exec(html);
+// Heuristics ordered most-trustworthy → least:
+//   1. og:title / og:description (portals usually put the listing's
+//      own postcode here)
+//   2. <title> tag (same)
+//   3. <h1> tag (page heading is the property)
+//   4. The first 30KB of HTML, with "similar properties" / "nearby"
+//      / "you might like" sections lopped off to avoid catching a
+//      neighbour's postcode.
+function scanPostcode(
+  html: string,
+  og: Record<string, string>,
+): string | null {
+  for (const key of ["og:title", "og:description"]) {
+    const v = og[key];
+    if (v) {
+      const m = UK_POSTCODE_RE.exec(v);
+      if (m) return m[1];
+    }
+  }
+
+  const titleMatch = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(html);
+  if (titleMatch) {
+    const m = UK_POSTCODE_RE.exec(titleMatch[1]);
+    if (m) return m[1];
+  }
+
+  const h1Match = /<h1[^>]*>([\s\S]*?)<\/h1>/i.exec(html);
+  if (h1Match) {
+    const m = UK_POSTCODE_RE.exec(h1Match[1]);
+    if (m) return m[1];
+  }
+
+  let early = html.slice(0, 30_000).toLowerCase();
+  for (const marker of [
+    "similar propert",
+    "nearby propert",
+    "you might like",
+    "properties for sale near",
+    "more from this agent",
+  ]) {
+    const idx = early.indexOf(marker);
+    if (idx > 0) early = early.slice(0, idx);
+  }
+  const m = UK_POSTCODE_RE.exec(html.slice(0, early.length));
   return m?.[1] ?? null;
 }
 

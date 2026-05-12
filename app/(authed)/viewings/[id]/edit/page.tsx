@@ -63,11 +63,12 @@ export default async function EditViewingPage({
         initialAddress={viewing.propertyAddress}
         initialPostcode={viewing.propertyPostcode}
         initialPricePence={viewing.propertyPricePence}
+        initialBedrooms={viewing.propertyBedrooms}
       />
 
       <Comparables
         postcode={viewing.propertyPostcode}
-        bedrooms={null}
+        bedrooms={viewing.propertyBedrooms}
       />
 
       <CaptureForm

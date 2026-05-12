@@ -24,11 +24,13 @@ export function PropertyHeaderForm({
   initialAddress,
   initialPostcode,
   initialPricePence,
+  initialBedrooms,
 }: {
   viewingId: string;
   initialAddress: string | null;
   initialPostcode: string | null;
   initialPricePence: number | null;
+  initialBedrooms: number | null;
 }) {
   const [address, setAddress] = useState(initialAddress ?? "");
   const [postcode, setPostcode] = useState(initialPostcode ?? "");
@@ -36,6 +38,9 @@ export function PropertyHeaderForm({
     initialPricePence != null
       ? String(Math.round(initialPricePence / 100))
       : "",
+  );
+  const [bedrooms, setBedrooms] = useState(
+    initialBedrooms != null ? String(initialBedrooms) : "",
   );
 
   const saveAddress = useCallback(
@@ -63,6 +68,15 @@ export function PropertyHeaderForm({
     },
     [viewingId],
   );
+  const saveBedrooms = useCallback(
+    async (value: string) => {
+      const n = parseInt(value.replace(/[^0-9]/g, ""), 10);
+      await updateViewingHeader(viewingId, {
+        propertyBedrooms: Number.isFinite(n) ? n : null,
+      });
+    },
+    [viewingId],
+  );
 
   const addressStatus = useDebouncedSave(
     address,
@@ -80,6 +94,11 @@ export function PropertyHeaderForm({
       ? String(Math.round(initialPricePence / 100))
       : "",
     savePrice,
+  );
+  const bedroomsStatus = useDebouncedSave(
+    bedrooms,
+    initialBedrooms != null ? String(initialBedrooms) : "",
+    saveBedrooms,
   );
 
   return (
@@ -112,7 +131,7 @@ export function PropertyHeaderForm({
         />
       </label>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <label className="block">
           <span className="text-text-secondary mb-1 flex items-center justify-between text-xs">
             <span>Postcode</span>
@@ -128,6 +147,21 @@ export function PropertyHeaderForm({
             autoCapitalize="characters"
             spellCheck={false}
             className="border-border bg-bg-page focus:ring-accent-soft h-11 w-full rounded-md border-[0.5px] px-3 text-base uppercase focus:ring-[3px] focus:outline-none"
+          />
+        </label>
+        <label className="block">
+          <span className="text-text-secondary mb-1 flex items-center justify-between text-xs">
+            <span>Beds</span>
+            <StatusBadge status={bedroomsStatus} />
+          </span>
+          <input
+            value={bedrooms}
+            onChange={(e) =>
+              setBedrooms(e.target.value.replace(/[^0-9]/g, ""))
+            }
+            placeholder="3"
+            inputMode="numeric"
+            className="border-border bg-bg-page focus:ring-accent-soft h-11 w-full rounded-md border-[0.5px] px-3 text-base focus:ring-[3px] focus:outline-none"
           />
         </label>
         <label className="block">

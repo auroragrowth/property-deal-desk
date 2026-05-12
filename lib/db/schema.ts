@@ -257,6 +257,7 @@ export const viewings = pgTable(
     propertyAddress: text("property_address"),
     propertyPostcode: text("property_postcode"),
     propertyPricePence: integer("property_price_pence"),
+    propertyBedrooms: integer("property_bedrooms"),
     overallNotes: text("overall_notes"),
     visitedAt: timestamp("visited_at", { withTimezone: true }).defaultNow(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
