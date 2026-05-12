@@ -4,7 +4,14 @@ import { getUserIdOrNull } from "@/lib/auth/server";
 import { getDealView, type DealResultView } from "@/features/deals/queries";
 import { fmtPenceShort, fmtPercent } from "@/lib/btl/calc";
 import { AssumptionForm } from "@/features/deals/assumption-form";
-import { computeMaxOfferForCriteria } from "@/features/deals/max-offer";
+import { InteractiveDealNumbers } from "@/features/deals/interactive-numbers";
+import {
+  fetchLocalRents,
+  PropertyDataConfigError,
+} from "@/features/properties/adapters/propertydata";
+
+// Photos / rent range come from short-lived sources — never cache.
+export const dynamic = "force-dynamic";
 
 const formatPostcode = (pc: string) => {
   if (pc.length <= 4) return pc;
@@ -18,8 +25,12 @@ const portalLabel = (host: string) => {
   return "the listing";
 };
 
+// PropertyData /rents returns £/week. Convert to monthly pence.
+const WEEK_TO_MONTH = 52 / 12;
+const weeklyPoundsToMonthlyPence = (weekly: number | undefined | null) =>
+  weekly == null ? null : Math.round(weekly * WEEK_TO_MONTH * 100);
+
 type Outputs = {
-  // Headline (Mastering The Numbers)
   gross_yield?: number;
   net_yield?: number;
   gross_roce?: number;
@@ -28,7 +39,6 @@ type Outputs = {
   all_money_out_offer?: number;
   monthly_cashflow?: number;
   annual_cashflow?: number;
-  // Working breakdown
   gdv?: number;
   refinance_budget?: number;
   total_in?: number;
@@ -44,7 +54,6 @@ type Outputs = {
   monthly_rent?: number;
   rent_source?: "override" | "estimated" | "missing";
   stress_2pct?: { rate: number; monthly_cashflow: number };
-  // Legacy (kept so old result rows still render)
   cash_required?: number;
   deposit?: number;
   cash_on_cash_roi?: number;
@@ -112,46 +121,59 @@ export default async function DealPage({
     max_cash_required_pence: lastSnap.criteria?.max_cash_required ?? 5000000,
   };
 
-  // Backward-engineered offer: highest price ≤ listing that still
-  // passes the current criteria (min cashflow, min Net ROCE,
-  // max money-left-in, +2% stress).
-  // Use the last run's rent (override > engine fallback) so the
-  // backward-search agrees with the on-screen verdict.
   const lastRunRent =
     (result?.outputs as { monthly_rent?: number } | undefined)?.monthly_rent ??
     null;
-  const maxOfferForCriteria = result
-    ? computeMaxOfferForCriteria(
-        property.listingPrice ?? 0,
-        {
-          id: property.id,
-          listing_price: property.listingPrice ?? 0,
-          estimated_monthly_rent: lastRunRent,
-          postcode: property.postcode,
-          bedrooms: property.bedrooms ?? 0,
-          property_type: property.propertyType ?? "other",
-        },
-        {
-          deposit_pct: formAssumptions.deposit_pct,
-          rate_pct: formAssumptions.rate_pct,
-          mgmt_pct: formAssumptions.mgmt_pct,
-          void_pct: formAssumptions.void_pct,
-          maintenance_pct: formAssumptions.maintenance_pct,
-          insurance_pcm: formAssumptions.insurance_pcm_pence,
-          refurb: formAssumptions.refurb_pence,
-          legal_fees: formAssumptions.legal_fees_pence,
-          auction_fee: formAssumptions.auction_fee_pence,
-          sourcing_fee: formAssumptions.sourcing_fee_pence,
-          gdv_pence: formAssumptions.gdv_pence ?? undefined,
-          rent_pcm: formAssumptions.rent_pcm_pence ?? undefined,
-        },
-        {
-          min_cashflow: formCriteria.min_cashflow_pence,
-          min_roi: formCriteria.min_roi_pct,
-          max_cash_required: formCriteria.max_cash_required_pence,
-        },
-      )
-    : 0;
+
+  // PropertyData area rent range (weekly £ → monthly pence). Failures
+  // are non-fatal — the slider falls back to ±25% of the initial rent.
+  let rentLowMonthlyPence: number | null = null;
+  let rentHighMonthlyPence: number | null = null;
+  try {
+    const r = await fetchLocalRents({
+      postcode: property.postcode,
+      bedrooms: property.bedrooms ?? undefined,
+    });
+    const range = r.data?.long_let?.range;
+    if (range && range.length === 2) {
+      rentLowMonthlyPence = weeklyPoundsToMonthlyPence(range[0]);
+      rentHighMonthlyPence = weeklyPoundsToMonthlyPence(range[1]);
+    }
+  } catch (e) {
+    if (!(e instanceof PropertyDataConfigError)) {
+      // Adapter errors are logged but never block the page.
+      console.error("rent range fetch failed", e);
+    }
+  }
+
+  // Engine inputs for the interactive component.
+  const engineProperty = {
+    id: property.id,
+    listing_price: property.listingPrice ?? 0,
+    estimated_monthly_rent: lastRunRent,
+    postcode: property.postcode,
+    bedrooms: property.bedrooms ?? 0,
+    property_type: property.propertyType ?? "other",
+  };
+  const engineAssumptions = {
+    deposit_pct: formAssumptions.deposit_pct,
+    rate_pct: formAssumptions.rate_pct,
+    mgmt_pct: formAssumptions.mgmt_pct,
+    void_pct: formAssumptions.void_pct,
+    maintenance_pct: formAssumptions.maintenance_pct,
+    insurance_pcm: formAssumptions.insurance_pcm_pence,
+    refurb: formAssumptions.refurb_pence,
+    legal_fees: formAssumptions.legal_fees_pence,
+    auction_fee: formAssumptions.auction_fee_pence,
+    sourcing_fee: formAssumptions.sourcing_fee_pence,
+    gdv_pence: formAssumptions.gdv_pence ?? undefined,
+    rent_pcm: formAssumptions.rent_pcm_pence ?? undefined,
+  };
+  const engineCriteria = {
+    min_cashflow: formCriteria.min_cashflow_pence,
+    min_roi: formCriteria.min_roi_pct,
+    max_cash_required: formCriteria.max_cash_required_pence,
+  };
 
   let host = "";
   try {
@@ -163,14 +185,6 @@ export default async function DealPage({
   }
 
   const o = (result?.outputs ?? {}) as Outputs;
-  const verdictClass =
-    result === null
-      ? "bg-bg-surface-2 border-border-strong text-text-primary"
-      : result.pass
-        ? "bg-pass-bg text-pass-fg border-pass-border"
-        : "bg-fail-bg text-fail-fg border-fail-border";
-  const verdictLabel =
-    result === null ? "Pending" : result.pass ? "Pass" : "Fail";
 
   return (
     <main id="main" className="bg-bg-page max-w-prose mx-auto p-8">
@@ -205,122 +219,23 @@ export default async function DealPage({
         )}
       </header>
 
-      {/* Verdict banner */}
-      <section
-        className={`rounded-r-md border-l-[3px] px-5 py-4 ${verdictClass}`}
-      >
-        <p className="font-mono text-xs tracking-[0.12em] uppercase">
-          Verdict
-        </p>
-        <p className="font-serif text-2xl">
-          {verdictLabel}
-          {result === null
-            ? " — analysis hasn't run yet."
-            : result.pass
-              ? " — meets your criteria."
-              : ` — ${result.failReasons.length} ${result.failReasons.length === 1 ? "issue" : "issues"} below.`}
-        </p>
-      </section>
+      {/* Live interactive numbers — sliders for rent + money-left-in,
+          headline KPIs, suggested offer, max offer for criteria,
+          stress test, verdict + reasons. */}
+      <InteractiveDealNumbers
+        property={engineProperty}
+        assumptions={engineAssumptions}
+        criteria={engineCriteria}
+        rentLowMonthlyPence={rentLowMonthlyPence}
+        rentHighMonthlyPence={rentHighMonthlyPence}
+        initialRentMonthlyPence={lastRunRent}
+      />
 
-      {/* Mastering The Numbers — headline grid */}
-      {result && (
-        <section className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <Kpi label="Gross yield" value={fmtPercent(o.gross_yield ?? 0)} />
-          <Kpi label="Net yield" value={fmtPercent(o.net_yield ?? 0)} />
-          <Kpi
-            label="Monthly cashflow"
-            value={fmtPenceShort(o.monthly_cashflow ?? 0)}
-            tone={(o.monthly_cashflow ?? 0) >= 0 ? "pass" : "fail"}
-          />
-          <Kpi label="Gross ROCE" value={fmtPercent(o.gross_roce ?? 0)} />
-          <Kpi label="Net ROCE" value={fmtPercent(o.net_roce ?? 0)} />
-          <Kpi
-            label="Money left in"
-            value={fmtPenceShort(o.money_left_in ?? 0)}
-            tone={(o.money_left_in ?? 0) === 0 ? "pass" : "neutral"}
-          />
-          <Kpi
-            label="All-money-out offer"
-            value={fmtPenceShort(o.all_money_out_offer ?? 0)}
-          />
-          <Kpi
-            label="Max offer for your criteria"
-            value={
-              maxOfferForCriteria > 0
-                ? fmtPenceShort(maxOfferForCriteria)
-                : "—"
-            }
-            tone={maxOfferForCriteria > 0 ? "pass" : "fail"}
-          />
-          <Kpi
-            label="Stamp duty (BTL)"
-            value={fmtPenceShort(o.stamp_duty ?? 0)}
-          />
-          <Kpi
-            label="Refinance budget (GDV × 75%)"
-            value={fmtPenceShort(o.refinance_budget ?? 0)}
-          />
-        </section>
-      )}
-
-      {/* Stress test */}
-      {result && o.stress_2pct && (
-        <section className="bg-bg-surface border-border mt-6 rounded-lg border-[0.5px] p-5">
-          <p className="text-text-secondary mb-1 font-mono text-[11px] tracking-[0.12em] uppercase">
-            Stress test (+2%)
-          </p>
-          <p className="text-text-primary text-sm">
-            At a rate of{" "}
-            <span className="font-mono">
-              {fmtPercent(o.stress_2pct.rate)}
-            </span>
-            , monthly cashflow becomes{" "}
-            <span
-              className={
-                o.stress_2pct.monthly_cashflow >= 0
-                  ? "text-pass-fg font-medium"
-                  : "text-fail-fg font-medium"
-              }
-            >
-              {fmtPenceShort(o.stress_2pct.monthly_cashflow)}/mo
-            </span>
-            .
-          </p>
-        </section>
-      )}
-
-      {/* Reasons */}
-      {result && (
-        <section className="mt-6">
-          <h2 className="text-text-primary mb-3 font-serif text-xl">
-            Reasons
-          </h2>
-          <ul className="space-y-2">
-            {result.passReasons.map((r, i) => (
-              <li key={`p-${i}`} className="flex items-start gap-2 text-sm">
-                <span aria-hidden className="text-pass-border mt-0.5">
-                  ✓
-                </span>
-                <span className="text-text-primary">{r}</span>
-              </li>
-            ))}
-            {result.failReasons.map((r, i) => (
-              <li key={`f-${i}`} className="flex items-start gap-2 text-sm">
-                <span aria-hidden className="text-fail-border mt-0.5">
-                  ✗
-                </span>
-                <span className="text-text-primary">{r}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {/* Numbers detail */}
+      {/* Numbers detail — from the last saved run, for the record. */}
       {result && (
         <section className="bg-bg-surface border-border mt-6 rounded-lg border-[0.5px] p-5">
           <p className="text-text-secondary mb-3 font-mono text-[11px] tracking-[0.12em] uppercase">
-            How we got there
+            Last saved run · how we got there
           </p>
           <dl className="text-text-primary grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
             <Row
@@ -419,31 +334,6 @@ function HistoryRow({ run }: { run: DealResultView }) {
         {run.pass ? "Pass" : "Fail"}
       </span>
     </li>
-  );
-}
-
-function Kpi({
-  label,
-  value,
-  tone = "neutral",
-}: {
-  label: string;
-  value: string;
-  tone?: "pass" | "fail" | "neutral";
-}) {
-  const valueClass =
-    tone === "pass"
-      ? "text-pass-fg"
-      : tone === "fail"
-        ? "text-fail-fg"
-        : "text-text-primary";
-  return (
-    <div className="bg-bg-surface border-border rounded-lg border-[0.5px] p-5">
-      <p className="text-text-tertiary font-mono text-[10px] tracking-[0.12em] uppercase">
-        {label}
-      </p>
-      <p className={`mt-1 font-serif text-3xl ${valueClass}`}>{value}</p>
-    </div>
   );
 }
 
