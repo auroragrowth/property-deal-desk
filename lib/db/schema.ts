@@ -305,6 +305,20 @@ export const viewingPhotos = pgTable(
   ],
 );
 
+// PropertyData response cache. One row per (endpoint + params hash).
+// Keeps live API calls cheap — most postcode-level numbers don't
+// move week-to-week.
+export const pdCache = pgTable(
+  "pd_cache",
+  {
+    key: text("key").primaryKey(),
+    body: jsonb("body").notNull(),
+    fetchedAt: timestamp("fetched_at", { withTimezone: true }).defaultNow(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  },
+  (t) => [index("pd_cache_expires_idx").on(t.expiresAt)],
+);
+
 export const auditLog = pgTable("audit_log", {
   id: bigserial("id", { mode: "number" }).primaryKey(),
   actorUserId: uuid("actor_user_id"),

@@ -1,5 +1,6 @@
 import "server-only";
 import type { NormalisedProperty } from "./_interface";
+import { fetchCached } from "./pd-cache";
 
 // PropertyData /sourced-properties adapter.
 //
@@ -102,6 +103,25 @@ export type SoldPricesResponse = {
   status?: string;
 };
 
+async function pdGet<T>(
+  endpoint: string,
+  params: URLSearchParams,
+  errPrefix: string,
+): Promise<T> {
+  const res = await fetch(`${BASE_URL}${endpoint}?${params}`, {
+    headers: { Accept: "application/json" },
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new PropertyDataApiError(
+      `${errPrefix} ${res.status}: ${body.slice(0, 200)}`,
+      res.status,
+    );
+  }
+  return (await res.json()) as T;
+}
+
 export async function fetchSoldPrices(q: {
   postcode: string;
   bedrooms?: number;
@@ -111,26 +131,19 @@ export async function fetchSoldPrices(q: {
   const apiKey = process.env.PROPERTYDATA_API_KEY;
   if (!apiKey) throw new PropertyDataConfigError("PROPERTYDATA_API_KEY not set");
 
-  const params = new URLSearchParams({
-    key: apiKey,
-    postcode: formatPostcodeForApi(q.postcode),
-  });
-  if (q.bedrooms != null) params.set("bedrooms", String(q.bedrooms));
-  if (q.type) params.set("type", q.type);
-  if (q.maxAge != null) params.set("max_age", String(q.maxAge));
-
-  const res = await fetch(`${BASE_URL}/sold-prices?${params}`, {
-    headers: { Accept: "application/json" },
-    cache: "no-store",
-  });
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    throw new PropertyDataApiError(
-      `PropertyData /sold-prices ${res.status}: ${body.slice(0, 200)}`,
-      res.status,
+  const pc = formatPostcodeForApi(q.postcode);
+  const cacheKey = `sold-prices:${pc}:${q.bedrooms ?? "any"}:${q.type ?? "any"}:${q.maxAge ?? 18}`;
+  return fetchCached(cacheKey, async () => {
+    const params = new URLSearchParams({ key: apiKey, postcode: pc });
+    if (q.bedrooms != null) params.set("bedrooms", String(q.bedrooms));
+    if (q.type) params.set("type", q.type);
+    if (q.maxAge != null) params.set("max_age", String(q.maxAge));
+    return pdGet<SoldPricesResponse>(
+      "/sold-prices",
+      params,
+      "PropertyData /sold-prices",
     );
-  }
-  return (await res.json()) as SoldPricesResponse;
+  });
 }
 
 export type RentsResponse = {
@@ -150,25 +163,74 @@ export async function fetchLocalRents(q: {
   const apiKey = process.env.PROPERTYDATA_API_KEY;
   if (!apiKey) throw new PropertyDataConfigError("PROPERTYDATA_API_KEY not set");
 
-  const params = new URLSearchParams({
-    key: apiKey,
-    postcode: formatPostcodeForApi(q.postcode),
+  const pc = formatPostcodeForApi(q.postcode);
+  const cacheKey = `rents:${pc}:${q.bedrooms ?? "any"}:${q.type ?? "any"}`;
+  return fetchCached(cacheKey, async () => {
+    const params = new URLSearchParams({ key: apiKey, postcode: pc });
+    if (q.bedrooms != null) params.set("bedrooms", String(q.bedrooms));
+    if (q.type) params.set("type", q.type);
+    return pdGet<RentsResponse>("/rents", params, "PropertyData /rents");
   });
-  if (q.bedrooms != null) params.set("bedrooms", String(q.bedrooms));
-  if (q.type) params.set("type", q.type);
+}
 
-  const res = await fetch(`${BASE_URL}/rents?${params}`, {
-    headers: { Accept: "application/json" },
-    cache: "no-store",
+// ── /prices — area asking-price averages ───────────────────────────
+
+export type PricesResponse = {
+  data?: {
+    average?: number;
+    range_low?: number;
+    range_high?: number;
+    points_analysed?: number;
+  };
+  status?: string;
+};
+
+export async function fetchAskingPrices(q: {
+  postcode: string;
+  bedrooms?: number;
+  type?: string;
+}): Promise<PricesResponse> {
+  const apiKey = process.env.PROPERTYDATA_API_KEY;
+  if (!apiKey) throw new PropertyDataConfigError("PROPERTYDATA_API_KEY not set");
+
+  const pc = formatPostcodeForApi(q.postcode);
+  const cacheKey = `prices:${pc}:${q.bedrooms ?? "any"}:${q.type ?? "any"}`;
+  return fetchCached(cacheKey, async () => {
+    const params = new URLSearchParams({ key: apiKey, postcode: pc });
+    if (q.bedrooms != null) params.set("bedrooms", String(q.bedrooms));
+    if (q.type) params.set("type", q.type);
+    return pdGet<PricesResponse>("/prices", params, "PropertyData /prices");
   });
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    throw new PropertyDataApiError(
-      `PropertyData /rents ${res.status}: ${body.slice(0, 200)}`,
-      res.status,
+}
+
+// ── /prices-per-sqf — area £/sqft averages ─────────────────────────
+
+export type PricesPerSqfResponse = {
+  data?: {
+    average?: number;
+    points_analysed?: number;
+  };
+  status?: string;
+};
+
+export async function fetchPricePerSqf(q: {
+  postcode: string;
+  type?: string;
+}): Promise<PricesPerSqfResponse> {
+  const apiKey = process.env.PROPERTYDATA_API_KEY;
+  if (!apiKey) throw new PropertyDataConfigError("PROPERTYDATA_API_KEY not set");
+
+  const pc = formatPostcodeForApi(q.postcode);
+  const cacheKey = `prices-per-sqf:${pc}:${q.type ?? "any"}`;
+  return fetchCached(cacheKey, async () => {
+    const params = new URLSearchParams({ key: apiKey, postcode: pc });
+    if (q.type) params.set("type", q.type);
+    return pdGet<PricesPerSqfResponse>(
+      "/prices-per-sqf",
+      params,
+      "PropertyData /prices-per-sqf",
     );
-  }
-  return (await res.json()) as RentsResponse;
+  });
 }
 
 export async function searchSourcedProperties(
