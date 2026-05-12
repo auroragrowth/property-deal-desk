@@ -9,6 +9,12 @@ const fmtGbp = (n: number | undefined) =>
     ? "—"
     : `£${Math.round(n).toLocaleString("en-GB", { maximumFractionDigits: 0 })}`;
 
+// PropertyData /rents returns values in £/week. UK BTL convention is
+// monthly, so convert (weeks → calendar month ≈ 52/12 = 4.333).
+const WEEK_TO_MONTH = 52 / 12;
+const weeklyToMonthly = (n: number | undefined) =>
+  n == null ? undefined : n * WEEK_TO_MONTH;
+
 // Server component — fetches /sold-prices and /rents in parallel and
 // renders a small comparables panel beside the viewing's URL preview.
 export async function Comparables({
@@ -80,13 +86,17 @@ export async function Comparables({
             Avg long-let rent
           </dt>
           <dd className="text-text-primary mt-1 font-serif text-xl">
-            {rent?.long_let?.average
-              ? `${fmtGbp(rent.long_let.average)}/mo`
-              : rent?.average
-                ? `${fmtGbp(rent.average)}/mo`
-                : "—"}
+            {(() => {
+              const wk = rent?.long_let?.average ?? rent?.average;
+              const mo = weeklyToMonthly(wk);
+              return mo ? `${fmtGbp(mo)}/mo` : "—";
+            })()}
           </dd>
           <dd className="text-text-tertiary text-[11px]">
+            {(() => {
+              const wk = rent?.long_let?.average ?? rent?.average;
+              return wk ? `${fmtGbp(wk)}/wk · ` : "";
+            })()}
             {rent?.points_analysed
               ? `${rent.points_analysed} listings analysed`
               : rentErr

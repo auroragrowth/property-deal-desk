@@ -6,6 +6,7 @@ import {
   signPhotoUrls,
 } from "@/features/viewings/queries";
 import { UrlPaste } from "@/features/viewings/url-paste";
+import { PropertyHeaderForm } from "@/features/viewings/property-header-form";
 import { CaptureForm } from "@/features/viewings/capture-form";
 import { Comparables } from "@/features/viewings/comparables";
 import { DeleteViewingButton } from "@/features/viewings/delete-button";
@@ -52,6 +53,13 @@ export default async function EditViewingPage({
       </header>
 
       <UrlPaste viewingId={viewing.id} initialUrl={viewing.propertyUrl} />
+
+      <PropertyHeaderForm
+        viewingId={viewing.id}
+        initialAddress={viewing.propertyAddress}
+        initialPostcode={viewing.propertyPostcode}
+        initialPricePence={viewing.propertyPricePence}
+      />
 
       <Comparables
         postcode={viewing.propertyPostcode}
