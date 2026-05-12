@@ -6,6 +6,7 @@ import {
   signPhotoUrls,
 } from "@/features/viewings/queries";
 import { Comparables } from "@/features/viewings/comparables";
+import { AnalyseFromViewingButton } from "@/features/viewings/analyse-button";
 
 // Photos are served via short-lived signed URLs — never cache the
 // rendered page, or stale URLs would 404 after expiry.
@@ -64,7 +65,7 @@ export default async function ViewingDetailPage({
             </p>
           )}
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-start gap-2">
           <Link
             href={`/viewings/${viewing.id}/edit`}
             className="border-border-strong text-text-primary hover:bg-bg-surface-2 inline-flex h-10 items-center rounded-md border-[0.5px] bg-transparent px-3 text-xs font-medium"
@@ -76,11 +77,12 @@ export default async function ViewingDetailPage({
               href={viewing.propertyUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-bg-strong text-text-on-strong inline-flex h-10 items-center rounded-md px-3 text-xs font-medium"
+              className="border-border-strong text-text-primary hover:bg-bg-surface-2 inline-flex h-10 items-center rounded-md border-[0.5px] bg-transparent px-3 text-xs font-medium"
             >
               Open listing
             </a>
           )}
+          <AnalyseFromViewingButton viewingId={viewing.id} />
         </div>
       </header>
 
