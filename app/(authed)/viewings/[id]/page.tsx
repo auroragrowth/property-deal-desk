@@ -82,6 +82,12 @@ export default async function ViewingDetailPage({
               Open listing
             </a>
           )}
+          <a
+            href={`/api/viewings/${viewing.id}/pdf`}
+            className="border-border-strong text-text-primary hover:bg-bg-surface-2 inline-flex h-10 items-center rounded-md border-[0.5px] bg-transparent px-3 text-xs font-medium"
+          >
+            Download PDF
+          </a>
           <AnalyseFromViewingButton viewingId={viewing.id} />
         </div>
       </header>
