@@ -125,8 +125,9 @@ export default async function DealPage({
     (result?.outputs as { monthly_rent?: number } | undefined)?.monthly_rent ??
     null;
 
-  // PropertyData area rent range (weekly £ → monthly pence). Failures
-  // are non-fatal — the slider falls back to ±25% of the initial rent.
+  // PropertyData area rent range (weekly £ → monthly pence). We prefer
+  // long_let.range, then derive ±15% from long_let.average / data.average
+  // when range is missing. Failures here are non-fatal.
   let rentLowMonthlyPence: number | null = null;
   let rentHighMonthlyPence: number | null = null;
   try {
@@ -135,9 +136,13 @@ export default async function DealPage({
       bedrooms: property.bedrooms ?? undefined,
     });
     const range = r.data?.long_let?.range;
+    const avgWeekly = r.data?.long_let?.average ?? r.data?.average;
     if (range && range.length === 2) {
       rentLowMonthlyPence = weeklyPoundsToMonthlyPence(range[0]);
       rentHighMonthlyPence = weeklyPoundsToMonthlyPence(range[1]);
+    } else if (avgWeekly) {
+      rentLowMonthlyPence = weeklyPoundsToMonthlyPence(avgWeekly * 0.85);
+      rentHighMonthlyPence = weeklyPoundsToMonthlyPence(avgWeekly * 1.15);
     }
   } catch (e) {
     if (!(e instanceof PropertyDataConfigError)) {

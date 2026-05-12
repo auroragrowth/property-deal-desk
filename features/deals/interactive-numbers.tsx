@@ -55,18 +55,28 @@ export function InteractiveDealNumbers({
   const hasRange =
     rentLowMonthlyPence != null && rentHighMonthlyPence != null &&
     rentHighMonthlyPence > rentLowMonthlyPence;
-  const defaultRent =
-    initialRentMonthlyPence ??
-    (rentLowMonthlyPence && rentHighMonthlyPence
-      ? Math.round((rentLowMonthlyPence + rentHighMonthlyPence) / 2)
-      : property.estimated_monthly_rent ?? 0);
+
+  // Conservative seed for the slider when PD gave us no range and no
+  // rent has been entered yet — keep the control usable (±25% of seed).
+  const fallbackSeed =
+    initialRentMonthlyPence ?? property.estimated_monthly_rent ?? 100000;
+
+  // Default rent = LOW end of the PD area range (most conservative starting
+  // point), else last-run / property rent, else the seed.
+  const defaultRent = hasRange
+    ? rentLowMonthlyPence!
+    : (initialRentMonthlyPence ?? property.estimated_monthly_rent ?? fallbackSeed);
 
   const [rentPence, setRentPence] = useState(defaultRent);
   const [moneyLeftInPence, setMoneyLeftInPence] = useState(0);
 
-  // Rent slider bounds — fall back to ±25% of default if PD has no range.
-  const rentMin = rentLowMonthlyPence ?? Math.round(defaultRent * 0.75);
-  const rentMax = rentHighMonthlyPence ?? Math.round(defaultRent * 1.25);
+  // Rent slider bounds — fall back to ±25% of seed if PD has no range.
+  const rentMin = hasRange
+    ? rentLowMonthlyPence!
+    : Math.max(0, Math.round(fallbackSeed * 0.75));
+  const rentMax = hasRange
+    ? rentHighMonthlyPence!
+    : Math.round(fallbackSeed * 1.25);
 
   // ── Engine run with current rent ────────────────────────────────
   const result = useMemo(() => {
