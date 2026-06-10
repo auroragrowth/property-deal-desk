@@ -10,6 +10,7 @@ export type AuthUser = {
   id: string; // uuid — matches users.id
   email: string | null;
   fullName: string | null;
+  lastSignInAt: string | null; // ISO timestamp from Supabase auth.users
 };
 
 // AUTH_BYPASS=true short-circuits auth entirely and returns a fixed
@@ -21,6 +22,7 @@ const BYPASS_USER: AuthUser = {
   id: "00000000-0000-0000-0000-000000000001",
   email: "demo@dealdesk.local",
   fullName: "Demo",
+  lastSignInAt: null,
 };
 
 export function authBypassEnabled(): boolean {
@@ -43,6 +45,7 @@ export async function getUser(): Promise<AuthUser | null> {
       ([user.user_metadata?.first_name, user.user_metadata?.last_name]
         .filter(Boolean)
         .join(" ") || null),
+    lastSignInAt: user.last_sign_in_at ?? null,
   };
 }
 

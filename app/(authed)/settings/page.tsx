@@ -6,6 +6,7 @@ import { db } from "@/lib/db/client";
 import { subscriptions } from "@/lib/db/schema";
 import { ManageBillingButton } from "@/features/billing/manage-billing-button";
 import { AccessibilitySettingsForm } from "@/features/accessibility/settings-form";
+import { ResetPasswordButton } from "@/features/auth/reset-password-button";
 
 export default async function SettingsPage() {
   const user = await getUser();
@@ -36,6 +37,17 @@ export default async function SettingsPage() {
           <div className="flex items-baseline justify-between p-4">
             <dt className="text-text-tertiary text-sm">Name</dt>
             <dd className="text-text-primary text-sm">{user.fullName ?? "—"}</dd>
+          </div>
+          <div className="flex items-baseline justify-between p-4">
+            <dt className="text-text-tertiary text-sm">Last sign-in</dt>
+            <dd className="text-text-primary font-mono text-xs">
+              {user.lastSignInAt
+                ? new Date(user.lastSignInAt).toLocaleString("en-GB", {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  })
+                : "—"}
+            </dd>
           </div>
         </dl>
       </section>
@@ -94,11 +106,23 @@ export default async function SettingsPage() {
         )}
       </section>
 
+      <section className="mb-10">
+        <h2 className="text-text-secondary mb-3 text-xs font-medium tracking-wide uppercase">
+          Security
+        </h2>
+        <div className="border-border bg-bg-surface rounded-lg border-[0.5px] p-5">
+          <p className="text-text-secondary mb-3 text-sm">
+            We&apos;ll email you a link to set a new password. The link works
+            once and expires in 60 minutes.
+          </p>
+          <ResetPasswordButton email={user.email} />
+        </div>
+      </section>
+
       <AccessibilitySettingsForm />
 
       <p className="text-text-tertiary text-sm">
-        Email change, password change, 2FA toggle, and account deletion ship by
-        week 12.
+        Email change, 2FA toggle, and account deletion ship by week 12.
       </p>
 
       <footer className="border-border text-text-tertiary mt-12 flex gap-4 border-t-[0.5px] pt-6 text-xs">
