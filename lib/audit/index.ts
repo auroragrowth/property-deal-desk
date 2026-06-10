@@ -12,7 +12,8 @@ export type AuditEntity =
   | "saved_filter"
   | "deal"
   | "deal_result"
-  | "property";
+  | "property"
+  | "auth";
 
 export type AuditAction =
   | "create"
@@ -22,7 +23,8 @@ export type AuditAction =
   | "trial_ended"
   | "payment_failed"
   | "payment_succeeded"
-  | "plan_changed";
+  | "plan_changed"
+  | "password_reset_requested";
 
 export type AuditEntry = {
   actorUserId: string | null;

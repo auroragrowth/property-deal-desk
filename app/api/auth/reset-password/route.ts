@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth/server";
 import { getSupabaseServerClient } from "@/lib/supabase/server";
+import { logAudit } from "@/lib/audit";
 
 // Authed users hit this from /settings → triggers Supabase to email a
 // password-reset link to the address on file. The link drops the user
@@ -26,5 +27,19 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  return NextResponse.json({ ok: true, email: user.email });
+  const sentAt = new Date().toISOString();
+
+  await logAudit({
+    actorUserId: user.id,
+    action: "password_reset_requested",
+    entity: "auth",
+    entityId: user.id,
+    after: { email: user.email, sentAt },
+    ip:
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+      req.headers.get("x-real-ip") ??
+      null,
+  });
+
+  return NextResponse.json({ ok: true, email: user.email, sentAt });
 }
